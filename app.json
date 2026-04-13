@@ -1,15 +1,17 @@
 {
   "expo": {
-    "name": "carrykart",
+    "name": "CarryKart",
     "slug": "carrykart-app-zopltotqee6peqaektfwn",
     "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "https://cdn-icons-png.flaticon.com/512/1048/1048315.png",
+    "splash": {
+      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048315.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#800020"
+    },
     "android": {
       "package": "com.carrykart.app"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
-      }
     }
   }
 }
