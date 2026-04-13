@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "carrykart-app",
+    "slug": "carrykart-app",
+    "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
+      }
+    }
+  }
+}
