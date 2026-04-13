@@ -1,8 +1,15 @@
 {
   "expo": {
-    "name": "carrykart-app",
-    "slug": "carrykart-app",
+    "name": "carrykart",
+    "slug": "carrykart",
     "version": "1.0.0",
+    "sdkVersion": "50.0.0",
+    "platforms": ["ios", "android"],
+
+    "android": {
+      "package": "com.carrykart.app"
+    },
+
     "extra": {
       "eas": {
         "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
