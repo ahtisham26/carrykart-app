@@ -1,4 +1,13 @@
+import React from "react";
+import { View, Text } from "react-native";
 
+export default function AddParcel() {
+  return (
+    <View>
+      <Text>Add new Parcel</Text>
+    </View>
+  );
+}
 import React from "react";
 import { View, Text } from "react-native";
 
