@@ -1,2 +1,2 @@
 # carrykart-app
-app for kashmir
+~kashmir
