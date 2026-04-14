@@ -12,11 +12,11 @@
     },
     "android": {
       "package": "com.carrykart.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
+      }
     }
-  }
-}
-"extra": {
-  "eas": {
-    "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
   }
 }
