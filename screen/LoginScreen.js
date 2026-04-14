@@ -22,6 +22,7 @@ export default function LoginScreen() {
     try {
       await confirm.confirm(otp);
       alert("Login Success");
+      setUser(true);
     } catch (e) {
       alert("Wrong OTP");
     }
