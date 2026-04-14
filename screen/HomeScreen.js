@@ -1,7 +1,14 @@
-import React from "react";
-import { View, Text, TouchableOpacity onPress={() => navigation.navigate("CreateOrder")}} from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import MyOrders from "./MyOrders";
 
 export default function HomeScreen() {
+  const [view, setView] = useState("home");
+
+  if (view === "orders") {
+    return <MyOrders />;
+  }
+
   return (
     <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
 
@@ -16,6 +23,7 @@ export default function HomeScreen() {
           borderRadius: 10,
           marginBottom: 10
         }}
+        onPress={() => alert("Create Order screen next step me connect hoga")}
       >
         <Text style={{ color: "white", textAlign: "center" }}>
           📦 Create Order
@@ -28,6 +36,7 @@ export default function HomeScreen() {
           padding: 15,
           borderRadius: 10
         }}
+        onPress={() => setView("orders")}
       >
         <Text style={{ color: "white", textAlign: "center" }}>
           📜 My Orders
