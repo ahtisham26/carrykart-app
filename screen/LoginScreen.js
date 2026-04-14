@@ -1,10 +1,9 @@
-export default function LoginScreen({ setUser }) {
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { auth } from "../firebase/config";
 import { signInWithPhoneNumber } from "firebase/auth";
 
-export default function LoginScreen() {
+export default function LoginScreen({ setUser }) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [confirm, setConfirm] = useState(null);
@@ -31,7 +30,6 @@ export default function LoginScreen() {
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-
       <Text style={{ fontSize: 26, marginBottom: 20 }}>CarryKart Login</Text>
 
       <TextInput
@@ -55,7 +53,6 @@ export default function LoginScreen() {
       <TouchableOpacity onPress={verifyOTP} style={{ backgroundColor: "green", padding: 15, marginTop: 10 }}>
         <Text style={{ color: "white", textAlign: "center" }}>Verify OTP</Text>
       </TouchableOpacity>
-
     </View>
   );
 }
