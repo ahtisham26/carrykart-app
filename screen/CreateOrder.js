@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from "react-native";
 import { db } from "../firebase/config";
 import { collection, addDoc } from "firebase/firestore";
 
@@ -49,50 +49,98 @@ export default function CreateOrder() {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
+    <ScrollView contentContainerStyle={styles.container}>
 
-      <Text style={{ fontSize: 24, marginBottom: 20 }}>
-        📦 Create Order
-      </Text>
+      <Text style={styles.title}>📦 Create Order</Text>
+      <Text style={styles.subtitle}>Fast pickup & delivery service</Text>
 
-      <TextInput
-        placeholder="Pickup Address"
-        value={pickup}
-        onChangeText={setPickup}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
-      />
+      <View style={styles.card}>
 
-      <TextInput
-        placeholder="Drop Address"
-        value={drop}
-        onChangeText={setDrop}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
-      />
+        <TextInput
+          placeholder="Pickup Address"
+          value={pickup}
+          onChangeText={setPickup}
+          style={styles.input}
+        />
 
-      <TextInput
-        placeholder="Item Description"
-        value={item}
-        onChangeText={setItem}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
-      />
+        <TextInput
+          placeholder="Drop Address"
+          value={drop}
+          onChangeText={setDrop}
+          style={styles.input}
+        />
 
-      <TextInput
-        placeholder="Distance (KM)"
-        value={distance}
-        keyboardType="numeric"
-        onChangeText={setDistance}
-        style={{ borderWidth: 1, marginBottom: 20, padding: 10 }}
-      />
+        <TextInput
+          placeholder="Item Description"
+          value={item}
+          onChangeText={setItem}
+          style={styles.input}
+        />
 
-      <TouchableOpacity
-        onPress={submitOrder}
-        style={{ backgroundColor: "black", padding: 15 }}
-      >
-        <Text style={{ color: "white", textAlign: "center" }}>
-          Calculate & Submit Order
-        </Text>
-      </TouchableOpacity>
+        <TextInput
+          placeholder="Distance (KM)"
+          value={distance}
+          keyboardType="numeric"
+          onChangeText={setDistance}
+          style={styles.input}
+        />
 
-    </View>
+        <TouchableOpacity
+          onPress={submitOrder}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>
+            Calculate & Submit Order 💰
+          </Text>
+        </TouchableOpacity>
+
+      </View>
+
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: "#f4f6f8",
+    justifyContent: "center"
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 5
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "gray",
+    marginBottom: 20
+  },
+  card: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 15,
+    elevation: 5
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10
+  },
+  button: {
+    backgroundColor: "#000",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10
+  },
+  buttonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold"
+  }
+});
