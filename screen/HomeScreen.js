@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import MyOrders from "./MyOrders";
+import AdminScreen from "./AdminScreen";
 
 export default function HomeScreen() {
   const [view, setView] = useState("home");
 
   if (view === "orders") {
     return <MyOrders />;
+  }
+
+  if (view === "admin") {
+    return <AdminScreen />;
   }
 
   return (
@@ -19,7 +24,7 @@ export default function HomeScreen() {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => alert("Create Order coming next")}
+          onPress={() => alert("Create Order screen already built — connect next")}
         >
           <Text style={styles.buttonText}>📦 Create Order</Text>
         </TouchableOpacity>
@@ -29,6 +34,13 @@ export default function HomeScreen() {
           onPress={() => setView("orders")}
         >
           <Text style={styles.buttonText}>📜 My Orders</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#ff9800" }]}
+          onPress={() => setView("admin")}
+        >
+          <Text style={styles.buttonText}>🛠 Admin Panel</Text>
         </TouchableOpacity>
 
       </View>
