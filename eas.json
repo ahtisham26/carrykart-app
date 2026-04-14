@@ -1,16 +1,11 @@
 {
-  "expo": {
-    "name": "CarryKart",
-    "slug": "carrykart-app-zopltotqee6peqaektfwn",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "platforms": ["android"],
-    "android": {
-      "package": "com.ahtisham.carrykart"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "android": {
+        "buildType": "apk"
       }
     }
   }
