@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-
 import { db } from "../firebase/config";
 import { collection, addDoc } from "firebase/firestore";
 
@@ -8,27 +7,41 @@ export default function CreateOrder() {
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [item, setItem] = useState("");
+  const [distance, setDistance] = useState("");
+
+  const calculatePrice = (dist) => {
+    const base = 60;
+    const perKm = 10;
+    const platformFee = 20;
+
+    return base + (dist * perKm) + platformFee;
+  };
 
   const submitOrder = async () => {
-    if (!pickup || !drop || !item) {
+    if (!pickup || !drop || !item || !distance) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
+
+    const price = calculatePrice(Number(distance));
 
     try {
       await addDoc(collection(db, "orders"), {
         pickup,
         drop,
         item,
+        distance,
+        price,
         status: "pending",
         createdAt: new Date()
       });
 
-      Alert.alert("Success 🚀", "Order saved successfully");
+      Alert.alert("Success 🚀", "Order placed! Total: ₹" + price);
 
       setPickup("");
       setDrop("");
       setItem("");
+      setDistance("");
 
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -60,6 +73,14 @@ export default function CreateOrder() {
         placeholder="Item Description"
         value={item}
         onChangeText={setItem}
+        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
+      />
+
+      <TextInput
+        placeholder="Distance (KM)"
+        value={distance}
+        keyboardType="numeric"
+        onChangeText={setDistance}
         style={{ borderWidth: 1, marginBottom: 20, padding: 10 }}
       />
 
@@ -68,7 +89,7 @@ export default function CreateOrder() {
         style={{ backgroundColor: "black", padding: 15 }}
       >
         <Text style={{ color: "white", textAlign: "center" }}>
-          Submit Order
+          Calculate & Submit Order
         </Text>
       </TouchableOpacity>
 
