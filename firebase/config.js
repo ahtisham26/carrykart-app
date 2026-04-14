@@ -3,12 +3,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDsUlNim4HMGIIT53qKIbK41w7CjrK_PY",
+  authDomain: "carrykart-6837b.firebaseapp.com",
+  projectId: "carrykart-6837b",
+  storageBucket: "carrykart-6837b.firebasestorage.app",
+  messagingSenderId: "410610080619",
+  appId: "1:410610080619:web:5e50ebca9d7f21f9b68a2e"
 };
 
 const app = initializeApp(firebaseConfig);
