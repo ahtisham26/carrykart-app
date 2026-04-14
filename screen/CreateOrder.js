@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from "react-native";
-import { db } from "../firebase/config";
+import { db, auth } from "../firebase/config";
 import { collection, addDoc } from "firebase/firestore";
+import * as Notifications from "expo-notifications";
 
 export default function CreateOrder() {
   const [pickup, setPickup] = useState("");
@@ -23,6 +24,11 @@ export default function CreateOrder() {
       return;
     }
 
+    if (!auth.currentUser) {
+      Alert.alert("Error", "User not logged in");
+      return;
+    }
+
     const price = calculatePrice(Number(distance));
 
     try {
@@ -33,7 +39,17 @@ export default function CreateOrder() {
         distance,
         price,
         status: "pending",
+        userId: auth.currentUser.uid, // ⭐ IMPORTANT
         createdAt: new Date()
+      });
+
+      // 🔔 Notification
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Order Placed 🚀",
+          body: "Your order has been successfully placed"
+        },
+        trigger: null
       });
 
       Alert.alert("Success 🚀", "Order placed! Total: ₹" + price);
