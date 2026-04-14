@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import MyOrders from "./MyOrders";
 import AdminScreen from "./AdminScreen";
+import DeliveryScreen from "./DeliveryScreen";
 
 export default function HomeScreen() {
   const [view, setView] = useState("home");
@@ -12,6 +13,10 @@ export default function HomeScreen() {
 
   if (view === "admin") {
     return <AdminScreen />;
+  }
+
+  if (view === "delivery") {
+    return <DeliveryScreen />;
   }
 
   return (
@@ -41,6 +46,13 @@ export default function HomeScreen() {
           onPress={() => setView("admin")}
         >
           <Text style={styles.buttonText}>🛠 Admin Panel</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#2196f3" }]}
+          onPress={() => setView("delivery")}
+        >
+          <Text style={styles.buttonText}>🚴 Delivery Panel</Text>
         </TouchableOpacity>
 
       </View>
