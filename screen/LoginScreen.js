@@ -1,19 +1,28 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { signInAnonymously } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 
 export default function LoginScreen({ setUser }) {
-  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const login = async () => {
     try {
-      const userCred = await signInAnonymously(auth);
+      const userCred = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const isAdmin =
+        email === "ahtishamulhaq087@gmail.com" &&
+        password === "orange26";
 
       setUser({
         uid: userCred.user.uid,
-        name: name,
-        role: name === "admin" ? "admin" : "user"
+        email,
+        role: isAdmin ? "admin" : "user",
       });
     } catch (e) {
       alert(e.message);
@@ -21,17 +30,31 @@ export default function LoginScreen({ setUser }) {
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text>Enter Name</Text>
+    <View style={{ padding: 20, marginTop: 100 }}>
+      <Text style={{ fontSize: 22, marginBottom: 20 }}>
+        CarryKart Login
+      </Text>
 
       <TextInput
-        placeholder="Name"
-        onChangeText={setName}
-        style={{ borderWidth: 1, marginBottom: 10 }}
+        placeholder="Email"
+        onChangeText={setEmail}
+        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
       />
 
-      <TouchableOpacity onPress={login}>
-        <Text>Login</Text>
+      <TextInput
+        placeholder="Password"
+        secureTextEntry
+        onChangeText={setPassword}
+        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
+      />
+
+      <TouchableOpacity
+        onPress={login}
+        style={{ backgroundColor: "black", padding: 15 }}
+      >
+        <Text style={{ color: "white", textAlign: "center" }}>
+          Login
+        </Text>
       </TouchableOpacity>
     </View>
   );
