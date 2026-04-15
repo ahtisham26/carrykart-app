@@ -1,47 +1,33 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { auth } from "../firebase/config";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 
 export default function LoginScreen({ setUser }) {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
-  const login = async () => {
-    try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      setUser(res.user);
-      alert("Login Success");
-    } catch (e) {
-      alert(e.message);
+  const login = () => {
+    if (email.trim().length > 3) {
+      setUser({ email });
+      Alert.alert("Login Success");
+    } else {
+      Alert.alert("Enter valid email");
     }
   };
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text style={{ fontSize: 26, marginBottom: 20 }}>CarryKart Login</Text>
+      <Text style={{ fontSize: 24, marginBottom: 20 }}>CarryKart Login</Text>
 
       <TextInput
         placeholder="Email"
         onChangeText={setEmail}
-        autoCapitalize="none"
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
-      />
-
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        style={{ borderWidth: 1, padding: 10 }}
       />
 
       <TouchableOpacity
         onPress={login}
-        style={{ backgroundColor: "black", padding: 15 }}
+        style={{ backgroundColor: "black", padding: 15, marginTop: 20 }}
       >
-        <Text style={{ color: "white", textAlign: "center" }}>
-          Login
-        </Text>
+        <Text style={{ color: "white", textAlign: "center" }}>Login</Text>
       </TouchableOpacity>
     </View>
   );
