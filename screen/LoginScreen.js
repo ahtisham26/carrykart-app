@@ -1,30 +1,54 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { auth } from "../firebase/config";
-import { signInWithPhoneNumber } from "firebase/auth";
+import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
 
 export default function LoginScreen({ setUser }) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [confirm, setConfirm] = useState(null);
 
+  // STEP 1: setup recaptcha (IMPORTANT FOR EXPO)
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+    }
+  };
+
   const sendOTP = async () => {
     try {
-      const confirmation = await signInWithPhoneNumber(auth, "+91" + phone);
+      setupRecaptcha();
+
+      const appVerifier = window.recaptchaVerifier;
+
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        "+91" + phone,
+        appVerifier
+      );
+
       setConfirm(confirmation);
-      alert("OTP Sent");
+      Alert.alert("OTP Sent");
     } catch (e) {
-      alert(e.message);
+      Alert.alert(e.message);
     }
   };
 
   const verifyOTP = async () => {
     try {
+      if (!confirm) {
+        Alert.alert("Please send OTP first");
+        return;
+      }
+
       await confirm.confirm(otp);
-      alert("Login Success");
+
+      Alert.alert("Login Success");
       setUser(true);
     } catch (e) {
-      alert("Wrong OTP");
+      Alert.alert("Wrong OTP");
     }
   };
 
@@ -39,7 +63,10 @@ export default function LoginScreen({ setUser }) {
         style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
       />
 
-      <TouchableOpacity onPress={sendOTP} style={{ backgroundColor: "black", padding: 15 }}>
+      <TouchableOpacity
+        onPress={sendOTP}
+        style={{ backgroundColor: "black", padding: 15 }}
+      >
         <Text style={{ color: "white", textAlign: "center" }}>Send OTP</Text>
       </TouchableOpacity>
 
@@ -50,9 +77,17 @@ export default function LoginScreen({ setUser }) {
         style={{ borderWidth: 1, padding: 10, marginTop: 20 }}
       />
 
-      <TouchableOpacity onPress={verifyOTP} style={{ backgroundColor: "green", padding: 15, marginTop: 10 }}>
-        <Text style={{ color: "white", textAlign: "center" }}>Verify OTP</Text>
+      <TouchableOpacity
+        onPress={verifyOTP}
+        style={{ backgroundColor: "green", padding: 15, marginTop: 10 }}
+      >
+        <Text style={{ color: "white", textAlign: "center" }}>
+          Verify OTP
+        </Text>
       </TouchableOpacity>
+
+      {/* Required hidden container for recaptcha */}
+      <View id="recaptcha-container" />
     </View>
   );
 }
