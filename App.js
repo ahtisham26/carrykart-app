@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import LoginScreen from "./screens/LoginScreen";
-import HomeScreen from "./screens/HomeScreen";
+import LoginScreen from "./screen/LoginScreen";
+import HomeScreen from "./screen/HomeScreen";
 import * as Notifications from "expo-notifications";
 
 export default function App() {
