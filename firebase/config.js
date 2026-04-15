@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDsUlNim4HMGIIT53qKIbK41w7CjrK_PY",
+  apiKey: "AIza...",
   authDomain: "carrykart-6837b.firebaseapp.com",
   projectId: "carrykart-6837b",
   storageBucket: "carrykart-6837b.appspot.com",
