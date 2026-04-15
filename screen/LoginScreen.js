@@ -1,33 +1,37 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { signInAnonymously } from "firebase/auth";
+import { auth } from "../firebase/config";
 
 export default function LoginScreen({ setUser }) {
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
 
-  const login = () => {
-    if (email.trim().length > 3) {
-      setUser({ email });
-      Alert.alert("Login Success");
-    } else {
-      Alert.alert("Enter valid email");
+  const login = async () => {
+    try {
+      const userCred = await signInAnonymously(auth);
+
+      setUser({
+        uid: userCred.user.uid,
+        name: name,
+        role: name === "admin" ? "admin" : "user"
+      });
+    } catch (e) {
+      alert(e.message);
     }
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text style={{ fontSize: 24, marginBottom: 20 }}>CarryKart Login</Text>
+    <View style={{ padding: 20 }}>
+      <Text>Enter Name</Text>
 
       <TextInput
-        placeholder="Email"
-        onChangeText={setEmail}
-        style={{ borderWidth: 1, padding: 10 }}
+        placeholder="Name"
+        onChangeText={setName}
+        style={{ borderWidth: 1, marginBottom: 10 }}
       />
 
-      <TouchableOpacity
-        onPress={login}
-        style={{ backgroundColor: "black", padding: 15, marginTop: 20 }}
-      >
-        <Text style={{ color: "white", textAlign: "center" }}>Login</Text>
+      <TouchableOpacity onPress={login}>
+        <Text>Login</Text>
       </TouchableOpacity>
     </View>
   );
