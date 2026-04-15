@@ -6,10 +6,6 @@ import * as Notifications from "expo-notifications";
 export default function App() {
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    Notifications.requestPermissionsAsync();
-  }, []);
-
   if (!user) {
     return <LoginScreen setUser={setUser} />;
   }
