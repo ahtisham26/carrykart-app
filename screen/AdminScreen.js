@@ -7,33 +7,34 @@ export default function AdminScreen() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setOrders(data);
+    const unsub = onSnapshot(collection(db, "orders"), (snap) => {
+      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-
-    return unsubscribe;
+    return unsub;
   }, []);
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 22 }}>Admin Dashboard</Text>
+    <View style={{ flex: 1, backgroundColor: "#0f172a", padding: 20 }}>
+      <Text style={{ fontSize: 22, color: "white", marginBottom: 10 }}>
+        Admin Dashboard
+      </Text>
 
       <FlatList
         data={orders}
-        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={{ padding: 10, borderWidth: 1, marginTop: 10 }}>
-            <Text>Name: {item.name}</Text>
-            <Text>Phone: {item.phone}</Text>
-            <Text>Pickup: {item.pickupAddress}</Text>
-            <Text>Drop: {item.dropAddress}</Text>
-            <Text>Notes: {item.notes}</Text>
-            <Text>User: {item.userEmail}</Text>
-            <Text>Status: {item.status}</Text>
+          <View
+            style={{
+              backgroundColor: "#1e293b",
+              padding: 15,
+              borderRadius: 12,
+              marginBottom: 10,
+            }}
+          >
+            <Text style={{ color: "white" }}>{item.name}</Text>
+            <Text style={{ color: "#94a3b8" }}>{item.phone}</Text>
+            <Text style={{ color: "#94a3b8" }}>
+              {item.pickupAddress} → {item.dropAddress}
+            </Text>
           </View>
         )}
       />
