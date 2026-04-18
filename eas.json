@@ -6,8 +6,10 @@
   "build": {
     "production": {
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "channel":"production"
       }
     }
   }
+}
 }
