@@ -14,9 +14,18 @@
     "android": {
       "package": "com.carrykart.app"
     },
+
+    "updates": {
+      "url": "https://u.expo.dev/6973e00f-8f7e-4411-8076-922fbf1d8e51"
+    },
+
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+
     "extra": {
       "eas": {
-        "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
+        "projectId": "6973e00f-8f7e-4411-8076-922fbf1d8e51"
       }
     }
   }
