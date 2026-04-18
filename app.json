@@ -5,11 +5,12 @@
     "owner": "carrykart-20",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "https://cdn-icons-png.flaticon.com/512/1048/1048315.png",
+    "icon": "./assets/icon.png.png"
     "splash": {
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048315.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#800020"
+  "image": "./assets/icon.png",
+  "resizeMode": "contain",
+  "backgroundColor": "#0f172a"
+}
     },
     "android": {
       "package": "com.carrykart.app"
