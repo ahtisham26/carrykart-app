@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from "react";
-
-// ❌ AsyncStorage removed (error fix)
- // import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import LoginScreen from "./screen/LoginScreen";
 import HomeScreen from "./screen/HomeScreen";
-import { View, ActivityIndicator } from "react-native";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // temporary mock loading fix (no AsyncStorage)
-    setTimeout(() => {
-      setUser(null);
-      setLoading(false);
-    }, 1000);
+    checkUser();
   }, []);
+
+  const checkUser = async () => {
+    try {
+      const data = await AsyncStorage.getItem("user");
+      if (data) setUser(JSON.parse(data));
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -27,5 +32,5 @@ export default function App() {
     );
   }
 
-  return user ? <HomeScreen /> : <LoginScreen />;
+  return user ? <HomeScreen /> : <LoginScreen setUser={setUser} />;
 }
