@@ -1,41 +1,68 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ImageBackground } from "react-native";
+import { View, Text, Button, StyleSheet } from "react-native";
 
-export default function HomeScreen({ navigation, user }) {
+export default function HomeScreen({ user, logout, navigation }) {
   return (
-    <ImageBackground
-      source={{ uri: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6" }}
-      style={{ flex: 1, justifyContent: "center", padding: 20 }}
-    >
-      <View style={{ backgroundColor: "rgba(0,0,0,0.6)", padding: 20, borderRadius: 20 }}>
-        
-        <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
-          🌺 CarryKart
-        </Text>
+    <View style={styles.container}>
+      
+      {/* HEADER */}
+      <Text style={styles.title}>Welcome 👋</Text>
+      <Text style={styles.subtitle}>
+        {user?.name ? user.name : "User"}
+      </Text>
 
-        <Text style={{ color: "#ccc", marginTop: 5 }}>
-          Welcome {user?.name}
-        </Text>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("CreateOrder")}
-          style={{ marginTop: 20, backgroundColor: "#800020", padding: 15, borderRadius: 12 }}
-        >
-          <Text style={{ color: "white", textAlign: "center" }}>
-            Create Order
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
+      {/* MY ORDERS */}
+      <View style={styles.btnBox}>
+        <Button
+          title="📦 My Orders"
           onPress={() => navigation.navigate("MyOrders")}
-          style={{ marginTop: 10, backgroundColor: "#1e293b", padding: 15, borderRadius: 12 }}
-        >
-          <Text style={{ color: "white", textAlign: "center" }}>
-            My Orders
-          </Text>
-        </TouchableOpacity>
-
+        />
       </View>
-    </ImageBackground>
+
+      {/* CREATE ORDER */}
+      <View style={styles.btnBox}>
+        <Button
+          title="➕ Create Order"
+          onPress={() => navigation.navigate("CreateOrder")}
+        />
+      </View>
+
+      {/* LOGOUT */}
+      <View style={styles.logoutBox}>
+        <Button title="🚪 Logout" color="red" onPress={logout} />
+      </View>
+
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 5,
+    textAlign: "center",
+  },
+
+  subtitle: {
+    fontSize: 18,
+    textAlign: "center",
+    marginBottom: 40,
+    color: "gray",
+  },
+
+  btnBox: {
+    marginVertical: 10,
+  },
+
+  logoutBox: {
+    marginTop: 40,
+  },
+});
