@@ -1,61 +1,36 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { View, TextInput, Button, Text } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const login = async () => {
+    if (!email || !password) {
+      alert("Fill all fields");
+      return;
+    }
+
+    const userData = { email };
+
     try {
-      const userCred = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      const isAdmin =
-        email === "ahtishamulhaq087@gmail.com" &&
-        password === "orange26";
-
-      setUser({
-        uid: userCred.user.uid,
-        email,
-        role: isAdmin ? "admin" : "user",
-      });
+      await AsyncStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
     } catch (e) {
-      alert(e.message);
+      console.log(e);
     }
   };
 
   return (
-    <View style={{ padding: 20, marginTop: 100 }}>
-      <Text style={{ fontSize: 22, marginBottom: 20 }}>
-        CarryKart Login
-      </Text>
+    <View style={{ padding: 20 }}>
+      <Text>Email</Text>
+      <TextInput value={email} onChangeText={setEmail} style={{ borderWidth: 1, marginBottom: 10 }} />
 
-      <TextInput
-        placeholder="Email"
-        onChangeText={setEmail}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
-      />
+      <Text>Password</Text>
+      <TextInput value={password} onChangeText={setPassword} secureTextEntry style={{ borderWidth: 1, marginBottom: 10 }} />
 
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
-      />
-
-      <TouchableOpacity
-        onPress={login}
-        style={{ backgroundColor: "black", padding: 15 }}
-      >
-        <Text style={{ color: "white", textAlign: "center" }}>
-          Login
-        </Text>
-      </TouchableOpacity>
+      <Button title="Login" onPress={login} />
     </View>
   );
 }
