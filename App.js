@@ -1,59 +1,31 @@
 import React, { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// ❌ AsyncStorage removed (error fix)
+ // import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import LoginScreen from "./screen/LoginScreen";
 import HomeScreen from "./screen/HomeScreen";
-import AdminScreen from "./screen/AdminScreen";
-import CreateOrder from "./screen/CreateOrder";
+import { View, ActivityIndicator } from "react-native";
 
 export default function App() {
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [screen, setScreen] = useState("home"); 
-  // screens: home | createOrder
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const saved = await AsyncStorage.getItem("user");
-      if (saved) setUser(JSON.parse(saved));
+    // temporary mock loading fix (no AsyncStorage)
+    setTimeout(() => {
+      setUser(null);
       setLoading(false);
-    };
-    loadUser();
+    }, 1000);
   }, []);
 
-  const handleLogin = async (data) => {
-    setUser(data);
-    await AsyncStorage.setItem("user", JSON.stringify(data));
-  };
-
-  const logout = async () => {
-    setUser(null);
-    await AsyncStorage.removeItem("user");
-    setScreen("home");
-  };
-
-  if (loading) return null;
-
-  if (!user) return <LoginScreen setUser={handleLogin} />;
-
-  // ADMIN
-  if (user.role === "admin")
-    return <AdminScreen user={user} logout={logout} />;
-
-  // SIMPLE SCREEN SWITCHING
-  if (screen === "createOrder")
+  if (loading) {
     return (
-      <CreateOrder
-        user={user}
-        goHome={() => setScreen("home")}
-      />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
     );
+  }
 
-  return (
-    <HomeScreen
-      user={user}
-      logout={logout}
-      goCreateOrder={() => setScreen("createOrder")}
-    />
-  );
+  return user ? <HomeScreen /> : <LoginScreen />;
 }
