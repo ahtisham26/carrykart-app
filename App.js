@@ -1,68 +1,49 @@
 import React, { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import LoginScreen from "./screen/LoginScreen";
 import HomeScreen from "./screen/HomeScreen";
 import AdminScreen from "./screen/AdminScreen";
-import CreateOrderScreen from "./screen/CreateOrderScreen";
-
-const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🔥 AUTO LOGIN CHECK
   useEffect(() => {
-    const loadUser = async () => {
-      const saved = await AsyncStorage.getItem("user");
-      if (saved) setUser(JSON.parse(saved));
-      setLoading(false);
-    };
-    loadUser();
+    checkLogin();
   }, []);
 
-  const loginUser = async (data) => {
-    setUser(data);
-    await AsyncStorage.setItem("user", JSON.stringify(data));
+  const checkLogin = async () => {
+    try {
+      const savedUser = await AsyncStorage.getItem("user");
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    setLoading(false);
   };
 
-  const logoutUser = async () => {
+  // 🔥 LOGIN FUNCTION
+  const handleLogin = async (userData) => {
+    setUser(userData);
+    await AsyncStorage.setItem("user", JSON.stringify(userData));
+  };
+
+  // 🔥 LOGOUT FUNCTION
+  const handleLogout = async () => {
     setUser(null);
     await AsyncStorage.removeItem("user");
   };
 
   if (loading) return null;
 
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        {!user ? (
-          <Stack.Screen name="Login">
-            {(props) => <LoginScreen {...props} setUser={loginUser} />}
-          </Stack.Screen>
-        ) : user.role === "admin" ? (
-          <Stack.Screen name="Admin">
-            {(props) => (
-              <AdminScreen {...props} user={user} logout={logoutUser} />
-            )}
-          </Stack.Screen>
-        ) : (
-          <>
-            <Stack.Screen name="Home">
-              {(props) => (
-                <HomeScreen {...props} user={user} logout={logoutUser} />
-              )}
-            </Stack.Screen>
+  if (!user) return <LoginScreen setUser={handleLogin} />;
 
-            <Stack.Screen
-              name="CreateOrder"
-              component={CreateOrderScreen}
-            />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  if (user.role === "admin")
+    return <AdminScreen user={user} logout={handleLogout} />;
+
+  return <HomeScreen user={user} logout={handleLogout} />;
 }
