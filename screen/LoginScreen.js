@@ -1,61 +1,56 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
 export default function LoginScreen({ setUser }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
-  const login = async () => {
-    try {
-      const userCred = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+  const handleLogin = () => {
+    if (!name) return;
 
-      const isAdmin =
-        email === "ahtishamulhaq087@gmail.com" &&
-        password === "orange26";
-
-      setUser({
-        uid: userCred.user.uid,
-        email,
-        role: isAdmin ? "admin" : "user",
-      });
-    } catch (e) {
-      alert(e.message);
+    if (name.toLowerCase() === "admin") {
+      setUser({ name, role: "admin" });
+    } else {
+      setUser({ name, role: "user" });
     }
   };
 
   return (
-    <View style={{ padding: 20, marginTop: 100 }}>
-      <Text style={{ fontSize: 22, marginBottom: 20 }}>
-        CarryKart Login
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.logo}>CarryKart</Text>
 
       <TextInput
-        placeholder="Email"
-        onChangeText={setEmail}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
+        placeholder="Enter your name"
+        placeholderTextColor="#888"
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
       />
 
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 10 }}
-      />
-
-      <TouchableOpacity
-        onPress={login}
-        style={{ backgroundColor: "black", padding: 15 }}
-      >
-        <Text style={{ color: "white", textAlign: "center" }}>
-          Login
-        </Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>ENTER</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f0a0a",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  logo: {
+    fontSize: 36,
+    color: "#c9a227",
+    marginBottom: 40,
+    fontWeight: "bold",
+    letterSpacing: 2,
+  },
+  input: {
+    width: "100%",
+    backgroundColor: "#1a1111",
+    padding: 15,
+    borderRadius: 12,
+    color: "#fff
