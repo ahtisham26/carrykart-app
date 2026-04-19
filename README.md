@@ -1,2 +1,0 @@
-# carrykart-app
-~kashmir
