@@ -1,37 +1,22 @@
 import React from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
-export default function HomeScreen({ user, logout, navigation }) {
+export default function HomeScreen({ user, logout, goCreateOrder }) {
   return (
     <View style={styles.container}>
-      
-      {/* HEADER */}
-      <Text style={styles.title}>Welcome 👋</Text>
-      <Text style={styles.subtitle}>
-        {user?.name ? user.name : "User"}
-      </Text>
+      <Text style={styles.title}>Welcome {user.name}</Text>
 
-      {/* MY ORDERS */}
-      <View style={styles.btnBox}>
-        <Button
-          title="📦 My Orders"
-          onPress={() => navigation.navigate("MyOrders")}
-        />
-      </View>
+      <TouchableOpacity style={styles.button} onPress={goCreateOrder}>
+        <Text style={styles.btnText}>Create Order</Text>
+      </TouchableOpacity>
 
-      {/* CREATE ORDER */}
-      <View style={styles.btnBox}>
-        <Button
-          title="➕ Create Order"
-          onPress={() => navigation.navigate("CreateOrder")}
-        />
-      </View>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.btnText}>My Orders</Text>
+      </TouchableOpacity>
 
-      {/* LOGOUT */}
-      <View style={styles.logoutBox}>
-        <Button title="🚪 Logout" color="red" onPress={logout} />
-      </View>
-
+      <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+        <Text style={styles.btnText}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -39,30 +24,24 @@ export default function HomeScreen({ user, logout, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#1a0f12",
     justifyContent: "center",
+    alignItems: "center",
   },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 5,
-    textAlign: "center",
+  title: { color: "#fff", fontSize: 22, marginBottom: 30 },
+  button: {
+    backgroundColor: "#800020",
+    padding: 15,
+    width: "80%",
+    marginBottom: 10,
+    borderRadius: 10,
   },
-
-  subtitle: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 40,
-    color: "gray",
+  logoutBtn: {
+    backgroundColor: "#3a0a15",
+    padding: 15,
+    width: "80%",
+    marginTop: 20,
+    borderRadius: 10,
   },
-
-  btnBox: {
-    marginVertical: 10,
-  },
-
-  logoutBox: {
-    marginTop: 40,
-  },
+  btnText: { color: "#fff", textAlign: "center", fontWeight: "bold" },
 });
