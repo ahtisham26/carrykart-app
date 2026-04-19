@@ -1,186 +1,53 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { db } from "../firebase/config";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 
-export default function CreateOrderScreen({ user }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [pickupAddress, setPickupAddress] = useState("");
-  const [dropAddress, setDropAddress] = useState("");
-  const [notes, setNotes] = useState("");
+export default function AdminScreen() {
+  const [orders, setOrders] = useState([]);
 
-  const createOrder = async () => {
-    if (!name || !phone || !pickupAddress || !dropAddress) {
-      alert("Fill all fields");
-      return;
-    }
+  useEffect(() => {
+    load();
+  }, []);
 
-    // 💰 PRICE CALCULATION
-    const price = 70;
+  const load = async () => {
+    const snap = await getDocs(collection(db, "orders"));
+    setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
 
-    try {
-      await addDoc(collection(db, "orders"), {
-        name,
-        phone,
-        pickupAddress,
-        dropAddress,
-        notes,
-        userId: user?.uid || "",
-        userEmail: user?.email || "",
-
-        // 🔥 IMPORTANT FIELDS
-        status: "pending",
-        payment: "unpaid",
-        price: price,
-
-        createdAt: new Date(),
-      });
-
-      alert("Order Created 🚀\nTotal: ₹" + price);
-
-      // RESET
-      setName("");
-      setPhone("");
-      setPickupAddress("");
-      setDropAddress("");
-      setNotes("");
-    } catch (e) {
-      alert(e.message);
-    }
+  const acceptOrder = async (id) => {
+    await updateDoc(doc(db, "orders", id), {
+      status: "accepted",
+    });
+    load();
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View
-          style={{
-            backgroundColor: "#1e293b",
-            padding: 20,
-            borderRadius: 20,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 20,
-              color: "white",
-              marginBottom: 15,
-              fontWeight: "bold",
-            }}
-          >
-            Create Order
-          </Text>
+    <View style={{ padding: 20 }}>
+      <Text style={{ fontSize: 22 }}>Admin Panel</Text>
 
-          <TextInput
-            placeholder="Full Name"
-            placeholderTextColor="#94a3b8"
-            value={name}
-            onChangeText={setName}
-            style={{
-              backgroundColor: "#0f172a",
-              color: "white",
-              padding: 12,
-              borderRadius: 10,
-              marginBottom: 10,
-            }}
-          />
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={{ padding: 10, borderWidth: 1, marginTop: 10 }}>
+            <Text>Pickup: {item.pickupAddress}</Text>
+            <Text>Drop: {item.dropAddress}</Text>
+            <Text>Status: {item.status}</Text>
 
-          <TextInput
-            placeholder="Phone Number"
-            placeholderTextColor="#94a3b8"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-            style={{
-              backgroundColor: "#0f172a",
-              color: "white",
-              padding: 12,
-              borderRadius: 10,
-              marginBottom: 10,
-            }}
-          />
-
-          <TextInput
-            placeholder="Pickup Address"
-            placeholderTextColor="#94a3b8"
-            value={pickupAddress}
-            onChangeText={setPickupAddress}
-            multiline
-            style={{
-              backgroundColor: "#0f172a",
-              color: "white",
-              padding: 12,
-              borderRadius: 10,
-              marginBottom: 10,
-              height: 70,
-            }}
-          />
-
-          <TextInput
-            placeholder="Drop Address"
-            placeholderTextColor="#94a3b8"
-            value={dropAddress}
-            onChangeText={setDropAddress}
-            multiline
-            style={{
-              backgroundColor: "#0f172a",
-              color: "white",
-              padding: 12,
-              borderRadius: 10,
-              marginBottom: 10,
-              height: 70,
-            }}
-          />
-
-          <TextInput
-            placeholder="Notes (optional)"
-            placeholderTextColor="#94a3b8"
-            value={notes}
-            onChangeText={setNotes}
-            style={{
-              backgroundColor: "#0f172a",
-              color: "white",
-              padding: 12,
-              borderRadius: 10,
-              marginBottom: 15,
-            }}
-          />
-
-          <TouchableOpacity
-            onPress={createOrder}
-            style={{
-              backgroundColor: "#22c55e",
-              padding: 15,
-              borderRadius: 12,
-            }}
-          >
-            <Text
+            <TouchableOpacity
+              onPress={() => acceptOrder(item.id)}
               style={{
-                textAlign: "center",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: 16,
+                marginTop: 10,
+                backgroundColor: "green",
+                padding: 10,
               }}
             >
-              🚀 Submit Order
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              <Text style={{ color: "white" }}>Accept</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+    </View>
   );
 }
