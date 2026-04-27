@@ -9,7 +9,6 @@ const firebaseConfig = {
   storageBucket: "carrykart-6837b.appspot.com",
   messagingSenderId: "410610080619",
   appId: "1:410610080619:web:5e50ebca9d7f21f9b68a2e",
-  databaseURL: "https://carrykart-6837b-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
 
 const app = initializeApp(firebaseConfig);
