@@ -1,50 +1,58 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity
+} from "react-native";
+import { db } from "../firebase/config";
+import {
+  collection,
+  onSnapshot,
+  updateDoc,
+  doc
+} from "firebase/firestore";
 
-export default function AdminScreen({ user }) {
+export default function AdminScreen() {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setOrders(list);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const updateStatus = async (id, status) => {
+    await updateDoc(doc(db, "orders", id), {
+      status: status
+    });
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Admin Panel</Text>
+    <View style={{ padding: 20 }}>
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={{ marginBottom: 15 }}>
+            <Text>{item.item} ({item.userEmail})</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Incoming Orders</Text>
-        <Text style={styles.text}>No orders</Text>
-      </View>
+            <TouchableOpacity onPress={() => updateStatus(item.id, "accepted")}>
+              <Text style={{ color: "green" }}>Accept</Text>
+            </TouchableOpacity>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Manage Users</Text>
-        <Text style={styles.text}>Coming soon</Text>
-      </View>
-    </ScrollView>
+            <TouchableOpacity onPress={() => updateStatus(item.id, "rejected")}>
+              <Text style={{ color: "red" }}>Reject</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0f0a0a",
-    padding: 15,
-  },
-  title: {
-    color: "#c9a227",
-    fontSize: 26,
-    marginBottom: 20,
-    fontWeight: "bold",
-  },
-  card: {
-    backgroundColor: "#1a1111",
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 15,
-    borderRightWidth: 4,
-    borderRightColor: "#800020",
-  },
-  cardTitle: {
-    color: "#fff",
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  text: {
-    color: "#aaa",
-  },
-});
