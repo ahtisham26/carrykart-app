@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+    import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import {
 
 export default function AdminScreen() {
   const [orders, setOrders] = useState([]);
-  const [boyEmail, setBoyEmail] = useState(""); // 🆕
+  const [boyEmail, setBoyEmail] = useState("");
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
@@ -37,22 +37,32 @@ export default function AdminScreen() {
     });
   };
 
+  // 🔥 FIX: email normalize
   const assignOrder = async (id) => {
+    const cleanEmail = boyEmail.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      alert("Enter delivery boy email");
+      return;
+    }
+
     await updateDoc(doc(db, "orders", id), {
-      assignedTo: boyEmail,
+      assignedTo: cleanEmail,
       deliveryStatus: "assigned"
     });
+
     alert("Assigned 🚚");
   };
 
   return (
     <View style={{ padding: 20 }}>
 
-      {/* 🆕 INPUT */}
       <TextInput
         placeholder="Delivery boy email"
         value={boyEmail}
         onChangeText={setBoyEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
         style={{
           borderWidth: 1,
           marginBottom: 15,
@@ -86,7 +96,6 @@ export default function AdminScreen() {
               <Text style={{ color: "red" }}>Reject</Text>
             </TouchableOpacity>
 
-            {/* 🆕 ASSIGN BUTTON */}
             <TouchableOpacity onPress={() => assignOrder(item.id)}>
               <Text style={{ color: "blue" }}>Assign</Text>
             </TouchableOpacity>
