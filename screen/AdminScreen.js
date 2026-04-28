@@ -3,8 +3,10 @@ import {
   View,
   Text,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput
 } from "react-native";
+
 import { db } from "../firebase/config";
 import {
   collection,
@@ -15,6 +17,7 @@ import {
 
 export default function AdminScreen() {
   const [orders, setOrders] = useState([]);
+  const [boyEmail, setBoyEmail] = useState(""); // 🆕
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
@@ -34,22 +37,60 @@ export default function AdminScreen() {
     });
   };
 
+  const assignOrder = async (id) => {
+    await updateDoc(doc(db, "orders", id), {
+      assignedTo: boyEmail,
+      deliveryStatus: "assigned"
+    });
+    alert("Assigned 🚚");
+  };
+
   return (
     <View style={{ padding: 20 }}>
+
+      {/* 🆕 INPUT */}
+      <TextInput
+        placeholder="Delivery boy email"
+        value={boyEmail}
+        onChangeText={setBoyEmail}
+        style={{
+          borderWidth: 1,
+          marginBottom: 15,
+          padding: 10
+        }}
+      />
+
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={{ marginBottom: 15 }}>
-            <Text>{item.item} ({item.userEmail})</Text>
 
-            <TouchableOpacity onPress={() => updateStatus(item.id, "accepted")}>
+            <Text>
+              {item.item} ({item.userEmail})
+            </Text>
+
+            <Text>
+              Assigned: {item.assignedTo || "none"}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => updateStatus(item.id, "accepted")}
+            >
               <Text style={{ color: "green" }}>Accept</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => updateStatus(item.id, "rejected")}>
+            <TouchableOpacity
+              onPress={() => updateStatus(item.id, "rejected")}
+            >
               <Text style={{ color: "red" }}>Reject</Text>
             </TouchableOpacity>
+
+            {/* 🆕 ASSIGN BUTTON */}
+            <TouchableOpacity onPress={() => assignOrder(item.id)}>
+              <Text style={{ color: "blue" }}>Assign</Text>
+            </TouchableOpacity>
+
           </View>
         )}
       />
