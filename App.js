@@ -3,6 +3,8 @@ import LoginScreen from "./screen/LoginScreen";
 import SignupScreen from "./screen/SignupScreen";
 import HomeScreen from "./screen/HomeScreen";
 import AdminScreen from "./screen/AdminScreen";
+import DeliveryScreen from "./screen/DeliveryScreen"; // 🆕 ADD
+
 import { auth } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -12,12 +14,24 @@ export default function App() {
   const [screen, setScreen] = useState("login");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+
+        let role = "user";
+
+        if (firebaseUser.email === "admin@gmail.com") {
+          role = "admin";
+        }
+
+        if (firebaseUser.email === "boy@gmail.com") {
+          role = "delivery";
+        }
+
         setUser({
-          email: user.email,
-          role: user.email === "admin@gmail.com" ? "admin" : "user"
+          email: firebaseUser.email,
+          role: role
         });
+
       } else {
         setUser(null);
       }
@@ -27,10 +41,8 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // ⛔ loading state
   if (loading) return null;
 
-  // ❌ not logged in
   if (!user) {
     if (screen === "login") {
       return (
@@ -49,8 +61,8 @@ export default function App() {
     );
   }
 
-  // ✅ logged in
   if (user.role === "admin") return <AdminScreen user={user} />;
+  if (user.role === "delivery") return <DeliveryScreen user={user} />; // 🆕
 
   return <HomeScreen user={user} />;
 }
