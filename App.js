@@ -3,10 +3,11 @@ import LoginScreen from "./screen/LoginScreen";
 import SignupScreen from "./screen/SignupScreen";
 import HomeScreen from "./screen/HomeScreen";
 import AdminScreen from "./screen/AdminScreen";
-import DeliveryScreen from "./screen/DeliveryScreen"; // 🆕 ADD
+import DeliveryScreen from "./screen/DeliveryScreen";
 
-import { auth } from "./firebase/config";
+import { auth, db } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -14,17 +15,17 @@ export default function App() {
   const [screen, setScreen] = useState("login");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+
+        // 🔥 FIREBASE SE ROLE FETCH
+        const userRef = doc(db, "users", firebaseUser.email);
+        const userSnap = await getDoc(userRef);
 
         let role = "user";
 
-        if (firebaseUser.email === "admin@gmail.com") {
-          role = "admin";
-        }
-
-        if (firebaseUser.email === "boy@gmail.com") {
-          role = "delivery";
+        if (userSnap.exists()) {
+          role = userSnap.data().role;
         }
 
         setUser({
@@ -35,6 +36,7 @@ export default function App() {
       } else {
         setUser(null);
       }
+
       setLoading(false);
     });
 
@@ -62,7 +64,7 @@ export default function App() {
   }
 
   if (user.role === "admin") return <AdminScreen user={user} />;
-  if (user.role === "delivery") return <DeliveryScreen user={user} />; // 🆕
+  if (user.role === "delivery") return <DeliveryScreen user={user} />;
 
   return <HomeScreen user={user} />;
 }
