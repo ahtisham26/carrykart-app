@@ -59,13 +59,16 @@ export default function DeliveryScreen({ user }) {
               Status: {item.deliveryStatus}
             </Text>
 
-            <TouchableOpacity
-              onPress={() => markDelivered(item.id)}
-            >
-              <Text style={{ color: "green" }}>
-                Mark Delivered
-              </Text>
-            </TouchableOpacity>
+            {/* 🔥 FIX: hide after delivered */}
+            {item.deliveryStatus !== "delivered" && (
+              <TouchableOpacity
+                onPress={() => markDelivered(item.id)}
+              >
+                <Text style={{ color: "green" }}>
+                  Mark Delivered
+                </Text>
+              </TouchableOpacity>
+            )}
 
           </View>
         )}
