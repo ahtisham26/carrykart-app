@@ -26,6 +26,9 @@ export default function HomeScreen({ user }) {
 
   // 🔥 FETCH ORDERS (REALTIME)
   useEffect(() => {
+
+    if (!user?.email) return; // ✅ FIX (sirf yeh add hua)
+
     const q = query(
       collection(db, "orders"),
       where("userEmail", "==", user.email)
@@ -40,7 +43,7 @@ export default function HomeScreen({ user }) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [user]); // ✅ FIX (dependency add ki)
 
   // 🛒 PLACE ORDER
   const placeOrder = async () => {
@@ -77,7 +80,7 @@ export default function HomeScreen({ user }) {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Welcome, {user.email}</Text>
+      <Text style={styles.title}>Welcome, {user?.email}</Text> {/* optional safe fix */}
 
       {/* LOGOUT */}
       <TouchableOpacity style={styles.logout} onPress={logout}>
