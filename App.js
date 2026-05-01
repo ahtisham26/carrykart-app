@@ -25,7 +25,11 @@ export default function App() {
 
           let role = "user";
 
-          if (snap.exists()) {
+          // 🔥 FORCE ADMIN (MAIN FIX)
+          if (firebaseUser.email === "ahtishamulhaq087@gmail.com") {
+            role = "admin";
+          } 
+          else if (snap.exists()) {
             role = snap.data().role;
           }
 
@@ -37,7 +41,7 @@ export default function App() {
         } catch (e) {
           console.log("Firestore error:", e);
 
-          // fallback (important)
+          // fallback
           setUser({
             email: firebaseUser.email,
             role: "user"
@@ -53,7 +57,6 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // ✅ FIX: never return null
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0f0a0a" }}>
@@ -62,7 +65,6 @@ export default function App() {
     );
   }
 
-  // not logged in
   if (!user) {
     if (screen === "login") {
       return (
@@ -80,7 +82,6 @@ export default function App() {
     );
   }
 
-  // role routing
   if (user.role === "admin") return <AdminScreen user={user} />;
   if (user.role === "delivery") return <DeliveryScreen user={user} />;
 
