@@ -24,10 +24,10 @@ export default function HomeScreen({ user }) {
   const [area, setArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // 🔥 FETCH ORDERS (REALTIME)
+  // 🔥 SAFE FETCH
   useEffect(() => {
 
-    if (!user?.email) return; // ✅ FIX (sirf yeh add hua)
+    if (!user || !user.email) return; // ✅ FIX
 
     const q = query(
       collection(db, "orders"),
@@ -43,7 +43,8 @@ export default function HomeScreen({ user }) {
     });
 
     return unsubscribe;
-  }, [user]); // ✅ FIX (dependency add ki)
+
+  }, [user]); // ✅ FIX
 
   // 🛒 PLACE ORDER
   const placeOrder = async () => {
@@ -64,7 +65,6 @@ export default function HomeScreen({ user }) {
       createdAt: new Date()
     });
 
-    // reset
     setName("");
     setPhone("");
     setPickup("");
@@ -78,74 +78,38 @@ export default function HomeScreen({ user }) {
     signOut(auth);
   };
 
+  // 🔥 EXTRA SAFETY (prevents blank)
+  if (!user) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: "#fff" }}>Loading user...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Welcome, {user?.email}</Text> {/* optional safe fix */}
+      <Text style={styles.title}>Welcome, {user.email}</Text>
 
-      {/* LOGOUT */}
       <TouchableOpacity style={styles.logout} onPress={logout}>
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
 
-      {/* ORDER FORM */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Place Order</Text>
 
-        <TextInput
-          placeholder="Full Name"
-          placeholderTextColor="#aaa"
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-        />
-
-        <TextInput
-          placeholder="Phone Number"
-          placeholderTextColor="#aaa"
-          style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="number-pad"
-        />
-
-        <TextInput
-          placeholder="Pickup Address"
-          placeholderTextColor="#aaa"
-          style={styles.input}
-          value={pickup}
-          onChangeText={setPickup}
-        />
-
-        <TextInput
-          placeholder="Delivery Address"
-          placeholderTextColor="#aaa"
-          style={styles.input}
-          value={delivery}
-          onChangeText={setDelivery}
-        />
-
-        <TextInput
-          placeholder="Area"
-          placeholderTextColor="#aaa"
-          style={styles.input}
-          value={area}
-          onChangeText={setArea}
-        />
-
-        <TextInput
-          placeholder="Landmark (optional)"
-          placeholderTextColor="#aaa"
-          style={styles.input}
-          value={landmark}
-          onChangeText={setLandmark}
-        />
+        <TextInput placeholder="Full Name" placeholderTextColor="#aaa" style={styles.input} value={name} onChangeText={setName} />
+        <TextInput placeholder="Phone Number" placeholderTextColor="#aaa" style={styles.input} value={phone} onChangeText={setPhone} keyboardType="number-pad" />
+        <TextInput placeholder="Pickup Address" placeholderTextColor="#aaa" style={styles.input} value={pickup} onChangeText={setPickup} />
+        <TextInput placeholder="Delivery Address" placeholderTextColor="#aaa" style={styles.input} value={delivery} onChangeText={setDelivery} />
+        <TextInput placeholder="Area" placeholderTextColor="#aaa" style={styles.input} value={area} onChangeText={setArea} />
+        <TextInput placeholder="Landmark (optional)" placeholderTextColor="#aaa" style={styles.input} value={landmark} onChangeText={setLandmark} />
 
         <TouchableOpacity style={styles.button} onPress={placeOrder}>
           <Text style={styles.buttonText}>PLACE ORDER</Text>
         </TouchableOpacity>
       </View>
 
-      {/* MY ORDERS */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>My Orders</Text>
 
@@ -168,68 +132,16 @@ export default function HomeScreen({ user }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0f0a0a",
-    padding: 15,
-  },
-  title: {
-    color: "#c9a227",
-    fontSize: 24,
-    marginBottom: 10,
-    fontWeight: "bold",
-  },
-  logout: {
-    backgroundColor: "#800020",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 15,
-    alignItems: "center",
-  },
-  logoutText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  card: {
-    backgroundColor: "#1a1111",
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 15,
-    borderLeftWidth: 4,
-    borderLeftColor: "#800020",
-  },
-  cardTitle: {
-    color: "#fff",
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  input: {
-    backgroundColor: "#0f0a0a",
-    padding: 12,
-    borderRadius: 10,
-    color: "#fff",
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: "#800020",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  text: {
-    color: "#aaa",
-  },
-  orderBox: {
-    backgroundColor: "#0f0a0a",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  status: {
-    color: "#c9a227",
-  },
+  container: { flex: 1, backgroundColor: "#0f0a0a", padding: 15 },
+  title: { color: "#c9a227", fontSize: 24, marginBottom: 10, fontWeight: "bold" },
+  logout: { backgroundColor: "#800020", padding: 10, borderRadius: 10, marginBottom: 15, alignItems: "center" },
+  logoutText: { color: "#fff", fontWeight: "bold" },
+  card: { backgroundColor: "#1a1111", padding: 20, borderRadius: 15, marginBottom: 15, borderLeftWidth: 4, borderLeftColor: "#800020" },
+  cardTitle: { color: "#fff", fontSize: 18, marginBottom: 10 },
+  input: { backgroundColor: "#0f0a0a", padding: 12, borderRadius: 10, color: "#fff", marginBottom: 10 },
+  button: { backgroundColor: "#800020", padding: 15, borderRadius: 10, alignItems: "center" },
+  buttonText: { color: "#fff", fontWeight: "bold" },
+  text: { color: "#aaa" },
+  orderBox: { backgroundColor: "#0f0a0a", padding: 10, borderRadius: 10, marginBottom: 10 },
+  status: { color: "#c9a227" }
 });
