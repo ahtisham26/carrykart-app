@@ -6,10 +6,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
 
-    "icon": "./carrykart-app/assets/icon.png",
+    "icon": "./assets/icon.png",
 
     "splash": {
-      "image": "./carrykart-app/assets/icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"
     },
