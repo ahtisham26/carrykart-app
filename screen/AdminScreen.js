@@ -7,133 +7,159 @@ import {
   TextInput
 } from "react-native";
 
-import { db } from "../firebase/config";
+import { db, auth } from "../firebase/config";
+
 import {
   collection,
   onSnapshot,
   updateDoc,
-  doc
+  doc,
+  setDoc
 } from "firebase/firestore";
+
+import {
+  createUserWithEmailAndPassword
+} from "firebase/auth";
 
 export default function AdminScreen() {
   const [orders, setOrders] = useState([]);
+
   const [boyEmail, setBoyEmail] = useState("");
+  const [boyPassword, setBoyPassword] = useState("");
 
   useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+      const list = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+      setOrders(list);
+    });
 
-    let unsubscribe;
-
-    try {
-      unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
-        const list = snapshot.docs.map(d => ({
-          id: d.id,
-          ...d.data()
-        }));
-        setOrders(list);
-      });
-    } catch (e) {
-      console.log("Admin fetch error:", e);
-    }
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-
+    return unsubscribe;
   }, []);
 
-  const updateStatus = async (id, status) => {
-    try {
-      await updateDoc(doc(db, "orders", id), {
-        status: status
-      });
-    } catch (e) {
-      console.log("Update error:", e);
-    }
-  };
-
+  // ✅ ASSIGN ORDER
   const assignOrder = async (id) => {
     if (!boyEmail) {
       alert("Enter delivery boy email");
       return;
     }
 
-    try {
-      await updateDoc(doc(db, "orders", id), {
-        assignedTo: boyEmail,
-        deliveryStatus: "assigned"
-      });
-      alert("Assigned 🚚");
-    } catch (e) {
-      console.log("Assign error:", e);
-    }
+    await updateDoc(doc(db, "orders", id), {
+      assignedTo: boyEmail,
+      deliveryStatus: "assigned"
+    });
+
+    alert("Assigned 🚚");
   };
 
-  // 🔥 SAFETY (prevents blank)
-  if (!orders) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "#fff" }}>Loading orders...</Text>
-      </View>
-    );
-  }
+  // 🔥 HIRE DELIVERY BOY
+  const hireBoy = async () => {
+    if (!boyEmail || !boyPassword) {
+      alert("Enter email & password");
+      return;
+    }
+
+    try {
+      // 1️⃣ Create auth user
+      const userCred = await createUserWithEmailAndPassword(
+        auth,
+        boyEmail,
+        boyPassword
+      );
+
+      // 2️⃣ Save role in Firestore
+      await setDoc(doc(db, "users", boyEmail), {
+        email: boyEmail,
+        role: "delivery"
+      });
+
+      alert("Delivery boy hired ✅");
+
+      // reset
+      setBoyEmail("");
+      setBoyPassword("");
+
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 
   return (
     <View style={{ padding: 20, backgroundColor: "#0f0a0a", flex: 1 }}>
 
+      {/* 🔥 HIRING SECTION */}
+      <Text style={{ color: "#fff", fontSize: 18, marginBottom: 10 }}>
+        Hire Delivery Boy
+      </Text>
+
       <TextInput
-        placeholder="Delivery boy email"
+        placeholder="Email"
         placeholderTextColor="#aaa"
         value={boyEmail}
         onChangeText={setBoyEmail}
         style={{
           borderWidth: 1,
           borderColor: "#333",
-          marginBottom: 15,
           padding: 10,
-          color: "#fff"
+          color: "#fff",
+          marginBottom: 10
         }}
       />
 
-      {orders.length === 0 ? (
-        <Text style={{ color: "#aaa" }}>No orders yet</Text>
-      ) : (
-        <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
+      <TextInput
+        placeholder="Password"
+        placeholderTextColor="#aaa"
+        value={boyPassword}
+        onChangeText={setBoyPassword}
+        secureTextEntry
+        style={{
+          borderWidth: 1,
+          borderColor: "#333",
+          padding: 10,
+          color: "#fff",
+          marginBottom: 10
+        }}
+      />
 
-            // 🔥 SAFETY (avoid undefined crash)
-            if (!item) return null;
+      <TouchableOpacity
+        onPress={hireBoy}
+        style={{
+          backgroundColor: "#800020",
+          padding: 12,
+          borderRadius: 10,
+          marginBottom: 20
+        }}
+      >
+        <Text style={{ color: "#fff", textAlign: "center" }}>
+          Hire
+        </Text>
+      </TouchableOpacity>
 
-            return (
-              <View style={{ marginBottom: 15 }}>
+      {/* 🔥 ORDERS */}
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={{ marginBottom: 15 }}>
 
-                <Text style={{ color: "#fff" }}>
-                  {item.item || "Order"} ({item.userEmail || "unknown"})
-                </Text>
+            <Text style={{ color: "#fff" }}>
+              {item.pickupAddress} → {item.deliveryAddress}
+            </Text>
 
-                <Text style={{ color: "#aaa" }}>
-                  Assigned: {item.assignedTo || "none"}
-                </Text>
+            <Text style={{ color: "#aaa" }}>
+              Assigned: {item.assignedTo || "none"}
+            </Text>
 
-                <TouchableOpacity onPress={() => updateStatus(item.id, "accepted")}>
-                  <Text style={{ color: "green" }}>Accept</Text>
-                </TouchableOpacity>
+            <TouchableOpacity onPress={() => assignOrder(item.id)}>
+              <Text style={{ color: "blue" }}>Assign</Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => updateStatus(item.id, "rejected")}>
-                  <Text style={{ color: "red" }}>Reject</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => assignOrder(item.id)}>
-                  <Text style={{ color: "blue" }}>Assign</Text>
-                </TouchableOpacity>
-
-              </View>
-            );
-          }}
-        />
-      )}
+          </View>
+        )}
+      />
 
     </View>
   );
-    }
+}
