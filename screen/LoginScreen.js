@@ -8,16 +8,28 @@ import {
   ImageBackground
 } from "react-native";
 
+import { signInAnonymously } from "firebase/auth";
+import { auth } from "../firebase/config";
+
 export default function LoginScreen({ setUser, goToSignup }) {
   const [name, setName] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!name) return;
 
-    if (name.toLowerCase() === "admin") {
-      setUser({ name, role: "admin" });
-    } else {
-      setUser({ name, role: "user" });
+    try {
+      // 🔥 Firebase ko trigger karega (important)
+      await signInAnonymously(auth);
+
+      // 🔥 local role bhi set (UI same rahe)
+      if (name.toLowerCase() === "admin") {
+        setUser({ name, role: "admin", email: "admin@gmail.com" });
+      } else {
+        setUser({ name, role: "user", email: `${name}@user.com` });
+      }
+
+    } catch (e) {
+      alert(e.message);
     }
   };
 
@@ -44,7 +56,6 @@ export default function LoginScreen({ setUser, goToSignup }) {
             <Text style={styles.buttonText}>ENTER</Text>
           </TouchableOpacity>
 
-          {/* 👇 NEW LINE (signup switch) */}
           <TouchableOpacity onPress={goToSignup}>
             <Text style={{ color: "#c9a227", textAlign: "center", marginTop: 15 }}>
               Create an Account
@@ -57,3 +68,48 @@ export default function LoginScreen({ setUser, goToSignup }) {
     </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  bg: { flex: 1 },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(15,10,10,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  logo: {
+    fontSize: 40,
+    color: "#c9a227",
+    marginBottom: 30,
+    fontWeight: "bold",
+    letterSpacing: 3,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "rgba(26,17,17,0.9)",
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#800020",
+  },
+  input: {
+    backgroundColor: "#0f0a0a",
+    padding: 15,
+    borderRadius: 10,
+    color: "#fff",
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  button: {
+    backgroundColor: "#800020",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
