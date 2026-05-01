@@ -5,21 +5,27 @@
     "owner": "carrykart-20",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+
+    "icon": "./carrykart-app/assets/icon.png",
+
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./carrykart-app/assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"
     },
+
     "android": {
       "package": "com.carrykart.app"
     },
+
     "updates": {
       "url": "https://u.expo.dev/75e10eb8-e125-44ac-a864-ffcab8284963"
     },
+
     "runtimeVersion": {
       "policy": "appVersion"
     },
+
     "extra": {
       "eas": {
         "projectId": "75e10eb8-e125-44ac-a864-ffcab8284963"
