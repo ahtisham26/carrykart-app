@@ -8,26 +8,22 @@ import {
   ImageBackground
 } from "react-native";
 
-import { signInAnonymously } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 
-export default function LoginScreen({ setUser, goToSignup }) {
-  const [name, setName] = useState("");
+export default function LoginScreen({ goToSignup }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    if (!name) return;
+    if (!email || !password) {
+      alert("Enter email & password");
+      return;
+    }
 
     try {
-      // 🔥 Firebase ko trigger karega (important)
-      await signInAnonymously(auth);
-
-      // 🔥 local role bhi set (UI same rahe)
-      if (name.toLowerCase() === "admin") {
-        setUser({ name, role: "admin", email: "admin@gmail.com" });
-      } else {
-        setUser({ name, role: "user", email: `${name}@user.com` });
-      }
-
+      await signInWithEmailAndPassword(auth, email, password);
+      // 🔥 App.js automatically handle karega (role + screen)
     } catch (e) {
       alert(e.message);
     }
@@ -44,12 +40,22 @@ export default function LoginScreen({ setUser, goToSignup }) {
         <Text style={styles.logo}>CarryKart</Text>
 
         <View style={styles.card}>
+
           <TextInput
-            placeholder="Enter your name"
+            placeholder="Email"
             placeholderTextColor="#aaa"
             style={styles.input}
-            value={name}
-            onChangeText={setName}
+            value={email}
+            onChangeText={setEmail}
+          />
+
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
           />
 
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -83,15 +89,12 @@ const styles = StyleSheet.create({
     color: "#c9a227",
     marginBottom: 30,
     fontWeight: "bold",
-    letterSpacing: 3,
   },
   card: {
     width: "100%",
     backgroundColor: "rgba(26,17,17,0.9)",
     padding: 20,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#800020",
   },
   input: {
     backgroundColor: "#0f0a0a",
@@ -99,8 +102,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     color: "#fff",
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#333",
   },
   button: {
     backgroundColor: "#800020",
