@@ -25,11 +25,10 @@ export default function App() {
 
           let role = "user";
 
-          // 🔥 FORCE ADMIN (MAIN FIX)
+          // 🔥 ADMIN FIX
           if (firebaseUser.email === "ahtishamulhaq087@gmail.com") {
             role = "admin";
-          } 
-          else if (snap.exists()) {
+          } else if (snap.exists()) {
             role = snap.data().role;
           }
 
@@ -39,9 +38,6 @@ export default function App() {
           });
 
         } catch (e) {
-          console.log("Firestore error:", e);
-
-          // fallback
           setUser({
             email: firebaseUser.email,
             role: "user"
@@ -57,6 +53,7 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  // 🔥 IMPORTANT: show loader, not null
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0f0a0a" }}>
@@ -65,21 +62,12 @@ export default function App() {
     );
   }
 
+  // 🔥 If already logged in → skip login screen
   if (!user) {
     if (screen === "login") {
-      return (
-        <LoginScreen
-          goToSignup={() => setScreen("signup")}
-        />
-      );
+      return <LoginScreen goToSignup={() => setScreen("signup")} />;
     }
-
-    return (
-      <SignupScreen
-        setUser={setUser}
-        goToLogin={() => setScreen("login")}
-      />
-    );
+    return <SignupScreen goToLogin={() => setScreen("login")} />;
   }
 
   if (user.role === "admin") return <AdminScreen user={user} />;
