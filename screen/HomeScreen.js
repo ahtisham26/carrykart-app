@@ -13,22 +13,18 @@ import {
 
 export default function HomeScreen({ user }) {
 
+  const [tab, setTab] = useState("create"); // 🔥 tab switch
+
   const [orders, setOrders] = useState([]);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-
   const [pickup, setPickup] = useState("");
   const [delivery, setDelivery] = useState("");
-
   const [area, setArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // 🔥 SAFE FETCH
   useEffect(() => {
-
-    if (!user || !user.email) return; // ✅ FIX
-
     const q = query(
       collection(db, "orders"),
       where("userEmail", "==", user.email)
@@ -43,10 +39,8 @@ export default function HomeScreen({ user }) {
     });
 
     return unsubscribe;
+  }, []);
 
-  }, [user]); // ✅ FIX
-
-  // 🛒 PLACE ORDER
   const placeOrder = async () => {
     if (!name || !phone || !pickup || !delivery) {
       alert("Fill required fields");
@@ -71,77 +65,92 @@ export default function HomeScreen({ user }) {
     setDelivery("");
     setArea("");
     setLandmark("");
+
+    alert("Order placed ✅");
   };
 
-  // 🚪 LOGOUT
   const logout = () => {
     signOut(auth);
   };
 
-  // 🔥 EXTRA SAFETY (prevents blank)
-  if (!user) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "#fff" }}>Loading user...</Text>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+
       <Text style={styles.title}>Welcome, {user.email}</Text>
 
       <TouchableOpacity style={styles.logout} onPress={logout}>
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Place Order</Text>
+      {/* 🔥 TAB SWITCH */}
+      <View style={styles.tabs}>
+        <TouchableOpacity onPress={() => setTab("create")}>
+          <Text style={tab === "create" ? styles.activeTab : styles.tab}>
+            Create Order
+          </Text>
+        </TouchableOpacity>
 
-        <TextInput placeholder="Full Name" placeholderTextColor="#aaa" style={styles.input} value={name} onChangeText={setName} />
-        <TextInput placeholder="Phone Number" placeholderTextColor="#aaa" style={styles.input} value={phone} onChangeText={setPhone} keyboardType="number-pad" />
-        <TextInput placeholder="Pickup Address" placeholderTextColor="#aaa" style={styles.input} value={pickup} onChangeText={setPickup} />
-        <TextInput placeholder="Delivery Address" placeholderTextColor="#aaa" style={styles.input} value={delivery} onChangeText={setDelivery} />
-        <TextInput placeholder="Area" placeholderTextColor="#aaa" style={styles.input} value={area} onChangeText={setArea} />
-        <TextInput placeholder="Landmark (optional)" placeholderTextColor="#aaa" style={styles.input} value={landmark} onChangeText={setLandmark} />
-
-        <TouchableOpacity style={styles.button} onPress={placeOrder}>
-          <Text style={styles.buttonText}>PLACE ORDER</Text>
+        <TouchableOpacity onPress={() => setTab("orders")}>
+          <Text style={tab === "orders" ? styles.activeTab : styles.tab}>
+            My Orders
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>My Orders</Text>
+      {/* 🔥 CREATE ORDER */}
+      {tab === "create" && (
+        <ScrollView>
+          <View style={styles.card}>
+            <TextInput placeholder="Name" style={styles.input} value={name} onChangeText={setName}/>
+            <TextInput placeholder="Phone" style={styles.input} value={phone} onChangeText={setPhone}/>
+            <TextInput placeholder="Pickup" style={styles.input} value={pickup} onChangeText={setPickup}/>
+            <TextInput placeholder="Delivery" style={styles.input} value={delivery} onChangeText={setDelivery}/>
+            <TextInput placeholder="Area" style={styles.input} value={area} onChangeText={setArea}/>
+            <TextInput placeholder="Landmark" style={styles.input} value={landmark} onChangeText={setLandmark}/>
 
-        {orders.length === 0 ? (
-          <Text style={styles.text}>No orders yet</Text>
-        ) : (
-          orders.map(order => (
-            <View key={order.id} style={styles.orderBox}>
-              <Text style={styles.text}>Name: {order.name}</Text>
-              <Text style={styles.text}>From: {order.pickupAddress}</Text>
-              <Text style={styles.text}>To: {order.deliveryAddress}</Text>
-              <Text style={styles.text}>Area: {order.area}</Text>
-              <Text style={styles.status}>Status: {order.status}</Text>
-            </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+            <TouchableOpacity style={styles.button} onPress={placeOrder}>
+              <Text style={styles.buttonText}>PLACE ORDER</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
+
+      {/* 🔥 MY ORDERS */}
+      {tab === "orders" && (
+        <ScrollView>
+          {orders.length === 0 ? (
+            <Text style={{ color: "#aaa" }}>No orders yet</Text>
+          ) : (
+            orders.map(order => (
+              <View key={order.id} style={styles.orderBox}>
+                <Text style={styles.text}>{order.pickupAddress} → {order.deliveryAddress}</Text>
+                <Text style={styles.status}>{order.status}</Text>
+              </View>
+            ))
+          )}
+        </ScrollView>
+      )}
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0f0a0a", padding: 15 },
-  title: { color: "#c9a227", fontSize: 24, marginBottom: 10, fontWeight: "bold" },
-  logout: { backgroundColor: "#800020", padding: 10, borderRadius: 10, marginBottom: 15, alignItems: "center" },
-  logoutText: { color: "#fff", fontWeight: "bold" },
-  card: { backgroundColor: "#1a1111", padding: 20, borderRadius: 15, marginBottom: 15, borderLeftWidth: 4, borderLeftColor: "#800020" },
-  cardTitle: { color: "#fff", fontSize: 18, marginBottom: 10 },
-  input: { backgroundColor: "#0f0a0a", padding: 12, borderRadius: 10, color: "#fff", marginBottom: 10 },
-  button: { backgroundColor: "#800020", padding: 15, borderRadius: 10, alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  text: { color: "#aaa" },
-  orderBox: { backgroundColor: "#0f0a0a", padding: 10, borderRadius: 10, marginBottom: 10 },
+  title: { color: "#c9a227", fontSize: 20 },
+  logout: { backgroundColor: "#800020", padding: 10, marginVertical: 10 },
+  logoutText: { color: "#fff", textAlign: "center" },
+
+  tabs: { flexDirection: "row", justifyContent: "space-around", marginBottom: 10 },
+  tab: { color: "#aaa" },
+  activeTab: { color: "#c9a227", fontWeight: "bold" },
+
+  card: { backgroundColor: "#1a1111", padding: 15 },
+  input: { backgroundColor: "#000", color: "#fff", marginBottom: 10, padding: 10 },
+  button: { backgroundColor: "#800020", padding: 15 },
+  buttonText: { color: "#fff", textAlign: "center" },
+
+  orderBox: { backgroundColor: "#000", padding: 10, marginBottom: 10 },
+  text: { color: "#fff" },
   status: { color: "#c9a227" }
 });
