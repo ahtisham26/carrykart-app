@@ -1,4 +1,4 @@
-    import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -20,89 +20,120 @@ export default function AdminScreen() {
   const [boyEmail, setBoyEmail] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
-      const list = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setOrders(list);
-    });
 
-    return unsubscribe;
+    let unsubscribe;
+
+    try {
+      unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+        const list = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data()
+        }));
+        setOrders(list);
+      });
+    } catch (e) {
+      console.log("Admin fetch error:", e);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+
   }, []);
 
   const updateStatus = async (id, status) => {
-    await updateDoc(doc(db, "orders", id), {
-      status: status
-    });
+    try {
+      await updateDoc(doc(db, "orders", id), {
+        status: status
+      });
+    } catch (e) {
+      console.log("Update error:", e);
+    }
   };
 
-  // 🔥 FIX: email normalize
   const assignOrder = async (id) => {
-    const cleanEmail = boyEmail.trim().toLowerCase();
-
-    if (!cleanEmail) {
+    if (!boyEmail) {
       alert("Enter delivery boy email");
       return;
     }
 
-    await updateDoc(doc(db, "orders", id), {
-      assignedTo: cleanEmail,
-      deliveryStatus: "assigned"
-    });
-
-    alert("Assigned 🚚");
+    try {
+      await updateDoc(doc(db, "orders", id), {
+        assignedTo: boyEmail,
+        deliveryStatus: "assigned"
+      });
+      alert("Assigned 🚚");
+    } catch (e) {
+      console.log("Assign error:", e);
+    }
   };
 
+  // 🔥 SAFETY (prevents blank)
+  if (!orders) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: "#fff" }}>Loading orders...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={{ padding: 20 }}>
+    <View style={{ padding: 20, backgroundColor: "#0f0a0a", flex: 1 }}>
 
       <TextInput
         placeholder="Delivery boy email"
+        placeholderTextColor="#aaa"
         value={boyEmail}
         onChangeText={setBoyEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
         style={{
           borderWidth: 1,
+          borderColor: "#333",
           marginBottom: 15,
-          padding: 10
+          padding: 10,
+          color: "#fff"
         }}
       />
 
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={{ marginBottom: 15 }}>
+      {orders.length === 0 ? (
+        <Text style={{ color: "#aaa" }}>No orders yet</Text>
+      ) : (
+        <FlatList
+          data={orders}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
 
-            <Text>
-              {item.item} ({item.userEmail})
-            </Text>
+            // 🔥 SAFETY (avoid undefined crash)
+            if (!item) return null;
 
-            <Text>
-              Assigned: {item.assignedTo || "none"}
-            </Text>
+            return (
+              <View style={{ marginBottom: 15 }}>
 
-            <TouchableOpacity
-              onPress={() => updateStatus(item.id, "accepted")}
-            >
-              <Text style={{ color: "green" }}>Accept</Text>
-            </TouchableOpacity>
+                <Text style={{ color: "#fff" }}>
+                  {item.item || "Order"} ({item.userEmail || "unknown"})
+                </Text>
 
-            <TouchableOpacity
-              onPress={() => updateStatus(item.id, "rejected")}
-            >
-              <Text style={{ color: "red" }}>Reject</Text>
-            </TouchableOpacity>
+                <Text style={{ color: "#aaa" }}>
+                  Assigned: {item.assignedTo || "none"}
+                </Text>
 
-            <TouchableOpacity onPress={() => assignOrder(item.id)}>
-              <Text style={{ color: "blue" }}>Assign</Text>
-            </TouchableOpacity>
+                <TouchableOpacity onPress={() => updateStatus(item.id, "accepted")}>
+                  <Text style={{ color: "green" }}>Accept</Text>
+                </TouchableOpacity>
 
-          </View>
-        )}
-      />
+                <TouchableOpacity onPress={() => updateStatus(item.id, "rejected")}>
+                  <Text style={{ color: "red" }}>Reject</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => assignOrder(item.id)}>
+                  <Text style={{ color: "blue" }}>Assign</Text>
+                </TouchableOpacity>
+
+              </View>
+            );
+          }}
+        />
+      )}
+
     </View>
   );
-}
+    }
