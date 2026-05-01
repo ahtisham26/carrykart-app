@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { View, Text } from "react-native";
+
 import LoginScreen from "./screen/LoginScreen";
 import SignupScreen from "./screen/SignupScreen";
 import HomeScreen from "./screen/HomeScreen";
@@ -16,25 +18,26 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+      try {
+        if (firebaseUser) {
+          const userRef = doc(db, "users", firebaseUser.email);
+          const userSnap = await getDoc(userRef);
 
-        // 🔥 FIREBASE SE ROLE FETCH
-        const userRef = doc(db, "users", firebaseUser.email);
-        const userSnap = await getDoc(userRef);
+          let role = "user";
 
-        let role = "user";
+          if (userSnap.exists()) {
+            role = userSnap.data().role;
+          }
 
-        if (userSnap.exists()) {
-          role = userSnap.data().role;
+          setUser({
+            email: firebaseUser.email,
+            role: role
+          });
+        } else {
+          setUser(null);
         }
-
-        setUser({
-          email: firebaseUser.email,
-          role: role
-        });
-
-      } else {
-        setUser(null);
+      } catch (e) {
+        console.log("ERROR:", e);
       }
 
       setLoading(false);
@@ -43,7 +46,21 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  if (loading) return null;
+  // 🔥 FIX: loading UI instead of blank
+  if (loading) {
+    return (
+      <View style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#0f0a0a"
+      }}>
+        <Text style={{ color: "#c9a227", fontSize: 18 }}>
+          Loading...
+        </Text>
+      </View>
+    );
+  }
 
   if (!user) {
     if (screen === "login") {
