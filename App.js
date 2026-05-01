@@ -18,26 +18,33 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          const userRef = doc(db, "users", firebaseUser.email);
-          const userSnap = await getDoc(userRef);
+      if (firebaseUser) {
+        try {
+          const ref = doc(db, "users", firebaseUser.email);
+          const snap = await getDoc(ref);
 
           let role = "user";
 
-          if (userSnap.exists()) {
-            role = userSnap.data().role;
+          if (snap.exists()) {
+            role = snap.data().role;
           }
 
           setUser({
             email: firebaseUser.email,
             role: role
           });
-        } else {
-          setUser(null);
+
+        } catch (e) {
+          console.log("Firestore error:", e);
+
+          // fallback (important)
+          setUser({
+            email: firebaseUser.email,
+            role: "user"
+          });
         }
-      } catch (e) {
-        console.log("ERROR:", e);
+      } else {
+        setUser(null);
       }
 
       setLoading(false);
@@ -46,27 +53,20 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // 🔥 FIX: loading UI instead of blank
+  // ✅ FIX: never return null
   if (loading) {
     return (
-      <View style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#0f0a0a"
-      }}>
-        <Text style={{ color: "#c9a227", fontSize: 18 }}>
-          Loading...
-        </Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0f0a0a" }}>
+        <Text style={{ color: "#fff" }}>Loading...</Text>
       </View>
     );
   }
 
+  // not logged in
   if (!user) {
     if (screen === "login") {
       return (
         <LoginScreen
-          setUser={setUser}
           goToSignup={() => setScreen("signup")}
         />
       );
@@ -80,6 +80,7 @@ export default function App() {
     );
   }
 
+  // role routing
   if (user.role === "admin") return <AdminScreen user={user} />;
   if (user.role === "delivery") return <DeliveryScreen user={user} />;
 
