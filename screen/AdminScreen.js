@@ -12,30 +12,27 @@ import {
 } from "firebase/firestore";
 
 export default function AdminScreen() {
+
   const [orders, setOrders] = useState([]);
   const [boyEmail, setBoyEmail] = useState("");
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+
       const list = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+
       setOrders(list);
     });
 
     return unsubscribe;
   }, []);
 
-  const updateStatus = async (id, status) => {
-    await updateDoc(doc(db, "orders", id), {
-      status: status
-    });
-  };
-
   const assignOrder = async (id) => {
     if (!boyEmail) {
-      alert("Enter delivery boy email");
+      alert("Enter delivery email");
       return;
     }
 
@@ -52,21 +49,22 @@ export default function AdminScreen() {
 
       {/* LOGOUT */}
       <TouchableOpacity
-        style={{ backgroundColor: "#800020", padding: 10, borderRadius: 10, marginBottom: 10 }}
         onPress={() => signOut(auth)}
+        style={{ backgroundColor: "#800020", padding: 10, borderRadius: 10 }}
       >
         <Text style={{ color: "#fff", textAlign: "center" }}>Logout</Text>
       </TouchableOpacity>
 
       {/* INPUT */}
       <TextInput
-        placeholder="Delivery boy email"
+        placeholder="Delivery Boy Email"
         value={boyEmail}
         onChangeText={setBoyEmail}
         style={{
           borderWidth: 1,
           padding: 10,
           borderRadius: 10,
+          marginTop: 10,
           marginBottom: 10
         }}
       />
@@ -75,6 +73,7 @@ export default function AdminScreen() {
         data={orders}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
+
           <View style={{
             backgroundColor: "#fff",
             padding: 15,
@@ -82,40 +81,36 @@ export default function AdminScreen() {
             marginBottom: 10
           }}>
 
+            <Text>Name: {item.name}</Text>
+            <Text>Phone: {item.phone}</Text>
+
             <Text>From: {item.pickupAddress}</Text>
             <Text>To: {item.deliveryAddress}</Text>
+
+            <Text>Distance: {item.distance} km</Text>
+            <Text>Amount: ₹{item.amount}</Text>
+
             <Text>Status: {item.status}</Text>
+            <Text>Delivery: {item.deliveryStatus}</Text>
+
             <Text>Assigned: {item.assignedTo || "none"}</Text>
 
-            {/* BUTTONS */}
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-
-              <TouchableOpacity
-                style={{ backgroundColor: "green", padding: 8, marginRight: 5 }}
-                onPress={() => updateStatus(item.id, "accepted")}
-              >
-                <Text style={{ color: "#fff" }}>Accept</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{ backgroundColor: "red", padding: 8, marginRight: 5 }}
-                onPress={() => updateStatus(item.id, "rejected")}
-              >
-                <Text style={{ color: "#fff" }}>Reject</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{ backgroundColor: "blue", padding: 8 }}
-                onPress={() => assignOrder(item.id)}
-              >
-                <Text style={{ color: "#fff" }}>Assign</Text>
-              </TouchableOpacity>
-
-            </View>
+            <TouchableOpacity
+              onPress={() => assignOrder(item.id)}
+              style={{
+                backgroundColor: "blue",
+                padding: 8,
+                marginTop: 10,
+                borderRadius: 5
+              }}
+            >
+              <Text style={{ color: "#fff" }}>Assign</Text>
+            </TouchableOpacity>
 
           </View>
         )}
       />
+
     </View>
   );
 }
