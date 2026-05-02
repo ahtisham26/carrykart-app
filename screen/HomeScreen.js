@@ -8,6 +8,8 @@ import {
   TouchableOpacity
 } from "react-native";
 
+import { Ionicons } from "@expo/vector-icons";
+
 import { auth, db } from "../firebase/config";
 import { signOut } from "firebase/auth";
 import {
@@ -30,11 +32,9 @@ export default function HomeScreen({ user }) {
   const [area, setArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // 💸 NEW
   const [distance, setDistance] = useState("");
   const [price, setPrice] = useState(0);
 
-  // 🔥 REALTIME ORDERS
   useEffect(() => {
     const q = query(
       collection(db, "orders"),
@@ -53,18 +53,11 @@ export default function HomeScreen({ user }) {
     return unsubscribe;
   }, []);
 
-  // 💸 AUTO PRICE CALCULATION
   useEffect(() => {
-    if (!distance) {
-      setPrice(0);
-      return;
-    }
-
-    const total = 60 + (parseFloat(distance) * 10) + 20;
-    setPrice(total);
+    if (!distance) return setPrice(0);
+    setPrice(60 + (parseFloat(distance) * 10) + 20);
   }, [distance]);
 
-  // 🛒 PLACE ORDER
   const placeOrder = async () => {
     if (!name || !phone || !pickup || !delivery || !distance) {
       alert("Fill required fields");
@@ -86,7 +79,6 @@ export default function HomeScreen({ user }) {
       createdAt: new Date()
     });
 
-    // reset
     setName("");
     setPhone("");
     setPickup("");
@@ -94,14 +86,10 @@ export default function HomeScreen({ user }) {
     setArea("");
     setLandmark("");
     setDistance("");
-    setPrice(0);
-
     setTab("orders");
   };
 
-  const logout = () => {
-    signOut(auth);
-  };
+  const logout = () => signOut(auth);
 
   return (
     <ScrollView style={styles.container}>
@@ -109,11 +97,11 @@ export default function HomeScreen({ user }) {
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.welcome}>
-          Welcome, {user.email.split("@")[0]}
+          👋 {user.email.split("@")[0]}
         </Text>
 
         <TouchableOpacity onPress={logout}>
-          <Text style={styles.logout}>Logout</Text>
+          <Ionicons name="log-out-outline" size={26} color="#800020" />
         </TouchableOpacity>
       </View>
 
@@ -121,26 +109,19 @@ export default function HomeScreen({ user }) {
       {tab === "home" && (
         <>
           <View style={styles.actions}>
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => setTab("create")}
-            >
-              <Text style={styles.actionTitle}>Create Order</Text>
-              <Text style={styles.actionSub}>Send a parcel</Text>
+            <TouchableOpacity style={styles.cardBtn} onPress={() => setTab("create")}>
+              <Ionicons name="add-circle" size={32} color="#800020" />
+              <Text style={styles.cardText}>Create Order</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => setTab("orders")}
-            >
-              <Text style={styles.actionTitle}>My Orders</Text>
-              <Text style={styles.actionSub}>Track orders</Text>
+            <TouchableOpacity style={styles.cardBtn} onPress={() => setTab("orders")}>
+              <Ionicons name="cube" size={32} color="#800020" />
+              <Text style={styles.cardText}>My Orders</Text>
             </TouchableOpacity>
           </View>
 
-          {/* RECENT */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Recent Orders</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recent Orders</Text>
 
             {orders.length === 0 ? (
               <Text style={styles.empty}>No orders yet</Text>
@@ -150,9 +131,7 @@ export default function HomeScreen({ user }) {
                   <Text style={styles.route}>
                     {order.pickupAddress} → {order.deliveryAddress}
                   </Text>
-                  <Text style={styles.meta}>
-                    Status: {order.status}
-                  </Text>
+                  <Text style={styles.meta}>₹{order.price}</Text>
                 </View>
               ))
             )}
@@ -160,31 +139,18 @@ export default function HomeScreen({ user }) {
         </>
       )}
 
-      {/* CREATE ORDER */}
+      {/* CREATE */}
       {tab === "create" && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Create Order</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Create Order</Text>
 
           <TextInput placeholder="Full Name" style={styles.input} value={name} onChangeText={setName} />
           <TextInput placeholder="Phone" style={styles.input} value={phone} onChangeText={setPhone} />
           <TextInput placeholder="Pickup Address" style={styles.input} value={pickup} onChangeText={setPickup} />
           <TextInput placeholder="Delivery Address" style={styles.input} value={delivery} onChangeText={setDelivery} />
-          <TextInput placeholder="Area" style={styles.input} value={area} onChangeText={setArea} />
-          <TextInput placeholder="Landmark" style={styles.input} value={landmark} onChangeText={setLandmark} />
+          <TextInput placeholder="Distance (km)" style={styles.input} value={distance} onChangeText={setDistance} keyboardType="numeric" />
 
-          {/* 💸 DISTANCE */}
-          <TextInput
-            placeholder="Distance (km)"
-            style={styles.input}
-            value={distance}
-            onChangeText={setDistance}
-            keyboardType="numeric"
-          />
-
-          {/* 💸 PRICE */}
-          <Text style={styles.price}>
-            Total Price: ₹{price}
-          </Text>
+          <Text style={styles.price}>₹ {price}</Text>
 
           <TouchableOpacity style={styles.button} onPress={placeOrder}>
             <Text style={styles.buttonText}>PLACE ORDER</Text>
@@ -192,37 +158,23 @@ export default function HomeScreen({ user }) {
         </View>
       )}
 
-      {/* MY ORDERS */}
+      {/* ORDERS */}
       {tab === "orders" && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>My Orders</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>My Orders</Text>
 
-          {orders.length === 0 ? (
-            <Text style={styles.empty}>No orders</Text>
-          ) : (
-            orders.map(order => (
-              <View key={order.id} style={styles.orderCard}>
-                <Text style={styles.route}>
-                  {order.pickupAddress} → {order.deliveryAddress}
-                </Text>
-
-                <Text style={styles.meta}>
-                  Status: {order.status}
-                </Text>
-
-                {/* 💸 SHOW PRICE */}
-                <Text style={styles.meta}>
-                  Price: ₹{order.price}
-                </Text>
-
-                <Text style={styles.meta}>
-                  Delivery: {order.deliveryStatus}
-                </Text>
-              </View>
-            ))
-          )}
+          {orders.map(order => (
+            <View key={order.id} style={styles.orderCard}>
+              <Text style={styles.route}>
+                {order.pickupAddress} → {order.deliveryAddress}
+              </Text>
+              <Text style={styles.meta}>₹{order.price}</Text>
+              <Text style={styles.meta}>{order.status}</Text>
+            </View>
+          ))}
         </View>
       )}
+
     </ScrollView>
   );
 }
@@ -230,7 +182,7 @@ export default function HomeScreen({ user }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fb",
+    backgroundColor: "#f4f6fb",
     padding: 15
   },
 
@@ -245,43 +197,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   },
 
-  logout: {
-    color: "#800020",
-    fontWeight: "bold"
-  },
-
   actions: {
     flexDirection: "row",
     justifyContent: "space-between"
   },
 
-  actionCard: {
+  cardBtn: {
     backgroundColor: "#fff",
     width: "48%",
     padding: 20,
-    borderRadius: 15,
-    elevation: 3
+    borderRadius: 20,
+    alignItems: "center",
+    elevation: 5
   },
 
-  actionTitle: {
-    fontSize: 16,
+  cardText: {
+    marginTop: 10,
     fontWeight: "bold"
   },
 
-  actionSub: {
-    color: "#888",
-    marginTop: 5
-  },
-
-  card: {
+  section: {
+    marginTop: 20,
     backgroundColor: "#fff",
     padding: 15,
-    borderRadius: 15,
-    marginTop: 20,
-    elevation: 3
+    borderRadius: 20,
+    elevation: 5
   },
 
-  cardTitle: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10
@@ -290,15 +233,15 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
-    padding: 10,
-    borderRadius: 10,
+    padding: 12,
+    borderRadius: 12,
     marginBottom: 10
   },
 
   button: {
     backgroundColor: "#800020",
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center"
   },
 
@@ -308,16 +251,15 @@ const styles = StyleSheet.create({
   },
 
   price: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#800020"
+    marginBottom: 10
   },
 
   orderCard: {
     backgroundColor: "#f1f1f1",
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     marginTop: 10
   },
 
@@ -326,8 +268,7 @@ const styles = StyleSheet.create({
   },
 
   meta: {
-    color: "#666",
-    marginTop: 3
+    color: "#666"
   },
 
   empty: {
