@@ -23,18 +23,20 @@ import {
 export default function HomeScreen({ user }) {
   const [tab, setTab] = useState("home");
 
+  // 🔥 STATES (FIXED — all separate)
   const [orders, setOrders] = useState([]);
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("");        // ✅ separate
   const [pickup, setPickup] = useState("");
   const [delivery, setDelivery] = useState("");
   const [area, setArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  const [distance, setDistance] = useState("");
+  const [distance, setDistance] = useState("");  // ✅ separate
   const [price, setPrice] = useState(0);
 
+  // 📦 FETCH ORDERS
   useEffect(() => {
     const q = query(
       collection(db, "orders"),
@@ -53,11 +55,17 @@ export default function HomeScreen({ user }) {
     return unsubscribe;
   }, []);
 
+  // 💸 PRICE CALCULATION
   useEffect(() => {
     if (!distance) return setPrice(0);
-    setPrice(60 + (parseFloat(distance) * 10) + 20);
+
+    const km = parseFloat(distance);
+    if (isNaN(km)) return setPrice(0);
+
+    setPrice(60 + (km * 10) + 20);
   }, [distance]);
 
+  // 🛒 PLACE ORDER
   const placeOrder = async () => {
     if (!name || !phone || !pickup || !delivery || !distance) {
       alert("Fill required fields");
@@ -79,6 +87,7 @@ export default function HomeScreen({ user }) {
       createdAt: new Date()
     });
 
+    // RESET
     setName("");
     setPhone("");
     setPickup("");
@@ -86,6 +95,7 @@ export default function HomeScreen({ user }) {
     setArea("");
     setLandmark("");
     setDistance("");
+
     setTab("orders");
   };
 
@@ -139,16 +149,61 @@ export default function HomeScreen({ user }) {
         </>
       )}
 
-      {/* CREATE */}
+      {/* CREATE ORDER */}
       {tab === "create" && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Create Order</Text>
 
-          <TextInput placeholder="Full Name" style={styles.input} value={name} onChangeText={setName} />
-          <TextInput placeholder="Phone" style={styles.input} value={phone} onChangeText={setPhone} />
-          <TextInput placeholder="Pickup Address" style={styles.input} value={pickup} onChangeText={setPickup} />
-          <TextInput placeholder="Delivery Address" style={styles.input} value={delivery} onChangeText={setDelivery} />
-          <TextInput placeholder="Distance (km)" style={styles.input} value={distance} onChangeText={setDistance} keyboardType="numeric" />
+          <TextInput
+            placeholder="Full Name"
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+          />
+
+          <TextInput
+            placeholder="Phone Number"
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}   // ✅ FIXED
+            keyboardType="number-pad"
+          />
+
+          <TextInput
+            placeholder="Pickup Address"
+            style={styles.input}
+            value={pickup}
+            onChangeText={setPickup}
+          />
+
+          <TextInput
+            placeholder="Delivery Address"
+            style={styles.input}
+            value={delivery}
+            onChangeText={setDelivery}
+          />
+
+          <TextInput
+            placeholder="Area"
+            style={styles.input}
+            value={area}
+            onChangeText={setArea}
+          />
+
+          <TextInput
+            placeholder="Landmark"
+            style={styles.input}
+            value={landmark}
+            onChangeText={setLandmark}
+          />
+
+          <TextInput
+            placeholder="Distance (km)"
+            style={styles.input}
+            value={distance}
+            onChangeText={setDistance}   // ✅ FIXED
+            keyboardType="numeric"
+          />
 
           <Text style={styles.price}>₹ {price}</Text>
 
@@ -158,20 +213,25 @@ export default function HomeScreen({ user }) {
         </View>
       )}
 
-      {/* ORDERS */}
+      {/* MY ORDERS */}
       {tab === "orders" && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>My Orders</Text>
 
-          {orders.map(order => (
-            <View key={order.id} style={styles.orderCard}>
-              <Text style={styles.route}>
-                {order.pickupAddress} → {order.deliveryAddress}
-              </Text>
-              <Text style={styles.meta}>₹{order.price}</Text>
-              <Text style={styles.meta}>{order.status}</Text>
-            </View>
-          ))}
+          {orders.length === 0 ? (
+            <Text style={styles.empty}>No orders</Text>
+          ) : (
+            orders.map(order => (
+              <View key={order.id} style={styles.orderCard}>
+                <Text style={styles.route}>
+                  {order.pickupAddress} → {order.deliveryAddress}
+                </Text>
+
+                <Text style={styles.meta}>₹{order.price}</Text>
+                <Text style={styles.meta}>Status: {order.status}</Text>
+              </View>
+            ))
+          )}
         </View>
       )}
 
