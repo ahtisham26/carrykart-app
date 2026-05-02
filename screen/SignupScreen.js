@@ -1,46 +1,19 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ImageBackground
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ImageBackground
 } from "react-native";
 
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/config";
+import { auth } from "../firebase/config";
 
-export default function SignupScreen({ setUser, goToLogin }) {
-
+export default function SignupScreen({ goToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSignup = async () => {
-    if (!email || !password) {
-      alert("Enter email & password");
-      return;
-    }
-
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      // 🔥 Firestore me user save (VERY IMPORTANT)
-      await setDoc(doc(db, "users", email), {
-        email: email,
-        role: "user"
-      });
-
-      setUser({
-        email: userCredential.user.email,
-        role: "user"
-      });
-
+      await createUserWithEmailAndPassword(auth, email, password);
     } catch (e) {
       alert(e.message);
     }
@@ -48,19 +21,17 @@ export default function SignupScreen({ setUser, goToLogin }) {
 
   return (
     <ImageBackground
-      source={{ uri: "https://images.unsplash.com/photo-1524594154908-edd89c543d0b" }}
+      source={{ uri: "https://i.ibb.co/2kR5zqX/lily-bg.jpg" }}
       style={styles.bg}
-      blurRadius={3}
     >
       <View style={styles.overlay}>
-
-        <Text style={styles.logo}>CarryKart</Text>
+        <Text style={styles.logo}>Delivery</Text>
 
         <View style={styles.card}>
+          <Text style={styles.title}>Create Account</Text>
 
           <TextInput
             placeholder="Email"
-            placeholderTextColor="#aaa"
             style={styles.input}
             value={email}
             onChangeText={setEmail}
@@ -68,25 +39,22 @@ export default function SignupScreen({ setUser, goToLogin }) {
 
           <TextInput
             placeholder="Password"
-            placeholderTextColor="#aaa"
+            secureTextEntry
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
           />
 
           <TouchableOpacity style={styles.button} onPress={handleSignup}>
-            <Text style={styles.buttonText}>SIGN UP</Text>
+            <Text style={styles.btnText}>SIGN UP</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={goToLogin}>
-            <Text style={{ color: "#c9a227", textAlign: "center", marginTop: 15 }}>
-              Already have an account? Login
+            <Text style={styles.link}>
+              Already have account? Login
             </Text>
           </TouchableOpacity>
-
         </View>
-
       </View>
     </ImageBackground>
   );
@@ -96,38 +64,46 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(15,10,10,0.85)",
     justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    padding: 20
   },
   logo: {
-    fontSize: 40,
-    color: "#c9a227",
-    marginBottom: 30,
-    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 28,
+    color: "#800020",
+    marginBottom: 20
   },
   card: {
-    width: "100%",
-    backgroundColor: "rgba(26,17,17,0.9)",
+    backgroundColor: "#fff",
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 15,
+    elevation: 5
+  },
+  title: {
+    fontSize: 22,
+    marginBottom: 15,
+    color: "#800020"
   },
   input: {
-    backgroundColor: "#0f0a0a",
-    padding: 15,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    padding: 12,
     borderRadius: 10,
-    color: "#fff",
-    marginBottom: 20,
+    marginBottom: 10
   },
   button: {
     backgroundColor: "#800020",
     padding: 15,
-    borderRadius: 12,
-    alignItems: "center",
+    borderRadius: 10
   },
-  buttonText: {
+  btnText: {
     color: "#fff",
-    fontWeight: "bold",
+    textAlign: "center",
+    fontWeight: "bold"
   },
+  link: {
+    textAlign: "center",
+    marginTop: 10,
+    color: "#800020"
+  }
 });
