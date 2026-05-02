@@ -18,6 +18,7 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+
       if (firebaseUser) {
         try {
           const ref = doc(db, "users", firebaseUser.email);
@@ -25,10 +26,7 @@ export default function App() {
 
           let role = "user";
 
-          // 🔥 ADMIN FIX
-          if (firebaseUser.email === "ahtishamulhaq087@gmail.com") {
-            role = "admin";
-          } else if (snap.exists()) {
+          if (snap.exists()) {
             role = snap.data().role;
           }
 
@@ -38,11 +36,13 @@ export default function App() {
           });
 
         } catch (e) {
+          // fallback (important)
           setUser({
             email: firebaseUser.email,
             role: "user"
           });
         }
+
       } else {
         setUser(null);
       }
@@ -53,23 +53,33 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // 🔥 IMPORTANT: show loader, not null
+  // 🔥 IMPORTANT: NEVER RETURN NULL
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0f0a0a" }}>
-        <Text style={{ color: "#fff" }}>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
-  // 🔥 If already logged in → skip login screen
+  // NOT LOGGED IN
   if (!user) {
     if (screen === "login") {
-      return <LoginScreen goToSignup={() => setScreen("signup")} />;
+      return (
+        <LoginScreen
+          goToSignup={() => setScreen("signup")}
+        />
+      );
     }
-    return <SignupScreen goToLogin={() => setScreen("login")} />;
+
+    return (
+      <SignupScreen
+        goToLogin={() => setScreen("login")}
+      />
+    );
   }
 
+  // 🔥 ROLE BASED NAVIGATION
   if (user.role === "admin") return <AdminScreen user={user} />;
   if (user.role === "delivery") return <DeliveryScreen user={user} />;
 
