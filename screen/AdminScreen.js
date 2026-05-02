@@ -19,46 +19,56 @@ import {
 
 export default function AdminScreen({ user }) {
   const [orders, setOrders] = useState([]);
+  const [deliveryBoys, setDeliveryBoys] = useState([]);
+  const [openAssignId, setOpenAssignId] = useState(null);
 
-  // 💸 STATS
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [pendingOrders, setPendingOrders] = useState(0);
-  const [completedOrders, setCompletedOrders] = useState(0);
 
+  // 🔥 FETCH ORDERS
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
-      const list = snapshot.docs.map(doc => ({
+    const unsub = onSnapshot(collection(db, "orders"), (snap) => {
+      const list = snap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
       setOrders(list);
 
-      // 💸 CALCULATIONS
-      let earnings = 0;
-      let pending = 0;
-      let completed = 0;
-
-      list.forEach(order => {
-        if (order.status === "completed") {
-          earnings += order.price || 0;
-          completed++;
-        } else {
-          pending++;
+      // 💸 earnings calc
+      let total = 0;
+      list.forEach(o => {
+        if (o.status === "completed") {
+          total += o.price || 0;
         }
       });
 
-      setTotalEarnings(earnings);
-      setTotalOrders(list.length);
-      setPendingOrders(pending);
-      setCompletedOrders(completed);
+      setTotalEarnings(total);
     });
 
-    return unsubscribe;
+    return unsub;
   }, []);
 
-  // ACTIONS
+  // 🚚 FETCH DELIVERY BOYS
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "deliveryBoys"), (snap) => {
+      const list = snap.docs.map(doc => doc.data());
+      setDeliveryBoys(list);
+    });
+
+    return unsub;
+  }, []);
+
+  // ✅ ASSIGN
+  const assignOrder = async (orderId, email) => {
+    await updateDoc(doc(db, "orders", orderId), {
+      assignedTo: email,
+      deliveryStatus: "assigned"
+    });
+
+    setOpenAssignId(null);
+  };
+
+  // ✅ ACCEPT / REJECT
   const acceptOrder = async (id) => {
     await updateDoc(doc(db, "orders", id), {
       status: "accepted"
@@ -71,16 +81,7 @@ export default function AdminScreen({ user }) {
     });
   };
 
-  const assignOrder = async (id) => {
-    await updateDoc(doc(db, "orders", id), {
-      assignedTo: "delivery@gmail.com",
-      deliveryStatus: "assigned"
-    });
-  };
-
-  const logout = () => {
-    signOut(auth);
-  };
+  const logout = () => signOut(auth);
 
   return (
     <ScrollView style={styles.container}>
@@ -93,78 +94,66 @@ export default function AdminScreen({ user }) {
         </TouchableOpacity>
       </View>
 
-      {/* 💸 STATS CARDS */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>₹{totalEarnings}</Text>
-          <Text style={styles.statLabel}>Earnings</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{totalOrders}</Text>
-          <Text style={styles.statLabel}>Orders</Text>
-        </View>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{pendingOrders}</Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{completedOrders}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
-        </View>
+      {/* 💸 EARNINGS */}
+      <View style={styles.card}>
+        <Text style={styles.big}>₹{totalEarnings}</Text>
+        <Text>Total Earnings</Text>
       </View>
 
       {/* ORDERS */}
-      <Text style={styles.section}>All Orders</Text>
+      {orders.map(order => (
+        <View key={order.id} style={styles.orderCard}>
 
-      {orders.length === 0 ? (
-        <Text style={styles.empty}>No orders</Text>
-      ) : (
-        orders.map(order => (
-          <View key={order.id} style={styles.card}>
+          <Text style={styles.route}>
+            {order.pickupAddress} → {order.deliveryAddress}
+          </Text>
 
-            <Text style={styles.route}>
-              {order.pickupAddress} → {order.deliveryAddress}
-            </Text>
+          <Text>Name: {order.name}</Text>
+          <Text>Phone: {order.phone}</Text>
 
-            <Text style={styles.meta}>Name: {order.name}</Text>
-            <Text style={styles.meta}>Phone: {order.phone}</Text>
+          <Text style={styles.price}>₹{order.price}</Text>
 
-            {/* 💸 PRICE */}
-            <Text style={styles.price}>
-              ₹{order.price}
-            </Text>
+          <Text>Status: {order.status}</Text>
+          <Text>Assigned: {order.assignedTo || "none"}</Text>
 
-            <Text style={styles.status}>
-              Status: {order.status}
-            </Text>
+          {/* ACTION BUTTONS */}
+          <View style={styles.row}>
+            <TouchableOpacity style={styles.accept} onPress={() => acceptOrder(order.id)}>
+              <Text style={styles.btn}>Accept</Text>
+            </TouchableOpacity>
 
-            <Text style={styles.meta}>
-              Assigned: {order.assignedTo || "none"}
-            </Text>
+            <TouchableOpacity style={styles.reject} onPress={() => rejectOrder(order.id)}>
+              <Text style={styles.btn}>Reject</Text>
+            </TouchableOpacity>
 
-            {/* BUTTONS */}
-            <View style={styles.buttons}>
-              <TouchableOpacity style={styles.accept} onPress={() => acceptOrder(order.id)}>
-                <Text style={styles.btnText}>Accept</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.reject} onPress={() => rejectOrder(order.id)}>
-                <Text style={styles.btnText}>Reject</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.assign} onPress={() => assignOrder(order.id)}>
-                <Text style={styles.btnText}>Assign</Text>
-              </TouchableOpacity>
-            </View>
-
+            <TouchableOpacity
+              style={styles.assign}
+              onPress={() =>
+                setOpenAssignId(openAssignId === order.id ? null : order.id)
+              }
+            >
+              <Text style={styles.btn}>Assign</Text>
+            </TouchableOpacity>
           </View>
-        ))
-      )}
+
+          {/* 👇 DELIVERY BOYS LIST */}
+          {openAssignId === order.id && (
+            <View style={styles.dropdown}>
+              {deliveryBoys.map(boy => (
+                <TouchableOpacity
+                  key={boy.email}
+                  style={styles.dropdownItem}
+                  onPress={() => assignOrder(order.id, boy.email)}
+                >
+                  <Text>{boy.name} ({boy.email})</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+        </View>
+      ))}
+
     </ScrollView>
   );
 }
@@ -172,7 +161,7 @@ export default function AdminScreen({ user }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fb",
+    backgroundColor: "#f4f6fb",
     padding: 15
   },
 
@@ -192,43 +181,26 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   },
 
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10
-  },
-
-  statCard: {
+  card: {
     backgroundColor: "#fff",
-    width: "48%",
     padding: 20,
     borderRadius: 15,
-    elevation: 3,
-    alignItems: "center"
+    alignItems: "center",
+    marginBottom: 20,
+    elevation: 4
   },
 
-  statValue: {
-    fontSize: 20,
+  big: {
+    fontSize: 28,
     fontWeight: "bold",
     color: "#800020"
   },
 
-  statLabel: {
-    color: "#888",
-    marginTop: 5
-  },
-
-  section: {
-    marginTop: 15,
-    fontSize: 18,
-    fontWeight: "bold"
-  },
-
-  card: {
+  orderCard: {
     backgroundColor: "#fff",
     padding: 15,
     borderRadius: 15,
-    marginTop: 10,
+    marginBottom: 15,
     elevation: 3
   },
 
@@ -236,24 +208,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   },
 
-  meta: {
-    color: "#555",
-    marginTop: 3
-  },
-
   price: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#800020",
-    marginTop: 5
+    color: "#800020"
   },
 
-  status: {
-    marginTop: 5,
-    fontWeight: "bold"
-  },
-
-  buttons: {
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10
@@ -277,13 +238,22 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
 
-  btnText: {
+  btn: {
     color: "#fff",
     fontWeight: "bold"
   },
 
-  empty: {
-    color: "#888",
-    textAlign: "center"
+  dropdown: {
+    backgroundColor: "#fff",
+    marginTop: 10,
+    borderRadius: 10,
+    padding: 10,
+    elevation: 5
+  },
+
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: "#eee"
   }
 });
