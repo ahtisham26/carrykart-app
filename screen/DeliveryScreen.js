@@ -1,19 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
+  View, Text, FlatList,
   TouchableOpacity
 } from "react-native";
 
-import { db } from "../firebase/config";
+import { db, auth } from "../firebase/config";
+import { signOut } from "firebase/auth";
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  updateDoc,
-  doc
+  collection, query, where,
+  onSnapshot, updateDoc, doc
 } from "firebase/firestore";
 
 export default function DeliveryScreen({ user }) {
@@ -25,18 +20,14 @@ export default function DeliveryScreen({ user }) {
       where("assignedTo", "==", user.email)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setOrders(list);
+    const unsub = onSnapshot(q, (snap) => {
+      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
-    return unsubscribe;
+    return unsub;
   }, []);
 
-  const markDelivered = async (id) => {
+  const delivered = async (id) => {
     await updateDoc(doc(db, "orders", id), {
       deliveryStatus: "delivered",
       status: "completed"
@@ -44,32 +35,36 @@ export default function DeliveryScreen({ user }) {
   };
 
   return (
-    <View style={{ padding: 20 }}>
+    <View style={{ flex: 1, padding: 15, backgroundColor: "#f5f5f5" }}>
+
+      {/* LOGOUT */}
+      <TouchableOpacity
+        style={{ backgroundColor: "#800020", padding: 10, borderRadius: 10, marginBottom: 10 }}
+        onPress={() => signOut(auth)}
+      >
+        <Text style={{ color: "#fff", textAlign: "center" }}>Logout</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={orders}
-        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={{ marginBottom: 15 }}>
+          <View style={{
+            backgroundColor: "#fff",
+            padding: 15,
+            borderRadius: 10,
+            marginBottom: 10
+          }}>
+            <Text>{item.pickupAddress} → {item.deliveryAddress}</Text>
+            <Text>Status: {item.deliveryStatus}</Text>
 
-            <Text>
-              {item.pickupAddress} → {item.deliveryAddress}
-            </Text>
-
-            <Text>
-              Status: {item.deliveryStatus}
-            </Text>
-
-            {/* 🔥 FIX: hide after delivered */}
             {item.deliveryStatus !== "delivered" && (
               <TouchableOpacity
-                onPress={() => markDelivered(item.id)}
+                style={{ backgroundColor: "green", padding: 10, marginTop: 10 }}
+                onPress={() => delivered(item.id)}
               >
-                <Text style={{ color: "green" }}>
-                  Mark Delivered
-                </Text>
+                <Text style={{ color: "#fff" }}>Mark Delivered</Text>
               </TouchableOpacity>
             )}
-
           </View>
         )}
       />
