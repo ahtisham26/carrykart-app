@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ImageBackground
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ImageBackground
 } from "react-native";
 
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -16,14 +12,8 @@ export default function LoginScreen({ goToSignup }) {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      alert("Enter email & password");
-      return;
-    }
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // 🔥 App.js automatically handle karega (role + screen)
     } catch (e) {
       alert(e.message);
     }
@@ -31,19 +21,17 @@ export default function LoginScreen({ goToSignup }) {
 
   return (
     <ImageBackground
-      source={{ uri: "https://images.unsplash.com/photo-1524594154908-edd89c543d0b" }}
+      source={{ uri: "https://i.ibb.co/2kR5zqX/lily-bg.jpg" }}
       style={styles.bg}
-      blurRadius={3}
     >
       <View style={styles.overlay}>
-
-        <Text style={styles.logo}>CarryKart</Text>
+        <Text style={styles.logo}>Delivery</Text>
 
         <View style={styles.card}>
+          <Text style={styles.title}>Welcome Back</Text>
 
           <TextInput
             placeholder="Email"
-            placeholderTextColor="#aaa"
             style={styles.input}
             value={email}
             onChangeText={setEmail}
@@ -51,25 +39,22 @@ export default function LoginScreen({ goToSignup }) {
 
           <TextInput
             placeholder="Password"
-            placeholderTextColor="#aaa"
+            secureTextEntry
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
           />
 
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>ENTER</Text>
+            <Text style={styles.btnText}>LOGIN</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={goToSignup}>
-            <Text style={{ color: "#c9a227", textAlign: "center", marginTop: 15 }}>
-              Create an Account
+            <Text style={styles.link}>
+              Don’t have an account? Sign Up
             </Text>
           </TouchableOpacity>
-
         </View>
-
       </View>
     </ImageBackground>
   );
@@ -79,38 +64,46 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(15,10,10,0.85)",
     justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    padding: 20
   },
   logo: {
-    fontSize: 40,
-    color: "#c9a227",
-    marginBottom: 30,
-    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 28,
+    color: "#800020",
+    marginBottom: 20
   },
   card: {
-    width: "100%",
-    backgroundColor: "rgba(26,17,17,0.9)",
+    backgroundColor: "#fff",
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 15,
+    elevation: 5
+  },
+  title: {
+    fontSize: 22,
+    marginBottom: 15,
+    color: "#800020"
   },
   input: {
-    backgroundColor: "#0f0a0a",
-    padding: 15,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    padding: 12,
     borderRadius: 10,
-    color: "#fff",
-    marginBottom: 20,
+    marginBottom: 10
   },
   button: {
     backgroundColor: "#800020",
     padding: 15,
-    borderRadius: 12,
-    alignItems: "center",
+    borderRadius: 10
   },
-  buttonText: {
+  btnText: {
     color: "#fff",
-    fontWeight: "bold",
+    textAlign: "center",
+    fontWeight: "bold"
   },
+  link: {
+    textAlign: "center",
+    marginTop: 10,
+    color: "#800020"
+  }
 });
