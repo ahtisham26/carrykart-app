@@ -13,20 +13,38 @@ import {
 
 export default function AdminScreen() {
   const [orders, setOrders] = useState([]);
-  const [email, setEmail] = useState("");
+  const [boyEmail, setBoyEmail] = useState("");
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "orders"), (snap) => {
-      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setOrders(list);
     });
-    return unsub;
+
+    return unsubscribe;
   }, []);
 
-  const assign = async (id) => {
+  const updateStatus = async (id, status) => {
     await updateDoc(doc(db, "orders", id), {
-      assignedTo: email,
+      status: status
+    });
+  };
+
+  const assignOrder = async (id) => {
+    if (!boyEmail) {
+      alert("Enter delivery boy email");
+      return;
+    }
+
+    await updateDoc(doc(db, "orders", id), {
+      assignedTo: boyEmail,
       deliveryStatus: "assigned"
     });
+
+    setBoyEmail("");
   };
 
   return (
@@ -40,15 +58,22 @@ export default function AdminScreen() {
         <Text style={{ color: "#fff", textAlign: "center" }}>Logout</Text>
       </TouchableOpacity>
 
+      {/* INPUT */}
       <TextInput
-        placeholder="Delivery Boy Email"
-        value={email}
-        onChangeText={setEmail}
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        placeholder="Delivery boy email"
+        value={boyEmail}
+        onChangeText={setBoyEmail}
+        style={{
+          borderWidth: 1,
+          padding: 10,
+          borderRadius: 10,
+          marginBottom: 10
+        }}
       />
 
       <FlatList
         data={orders}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={{
             backgroundColor: "#fff",
@@ -56,15 +81,38 @@ export default function AdminScreen() {
             borderRadius: 10,
             marginBottom: 10
           }}>
-            <Text>{item.pickupAddress} → {item.deliveryAddress}</Text>
-            <Text>Status: {item.status}</Text>
 
-            <TouchableOpacity
-              style={{ backgroundColor: "blue", padding: 8, marginTop: 5 }}
-              onPress={() => assign(item.id)}
-            >
-              <Text style={{ color: "#fff" }}>Assign</Text>
-            </TouchableOpacity>
+            <Text>From: {item.pickupAddress}</Text>
+            <Text>To: {item.deliveryAddress}</Text>
+            <Text>Status: {item.status}</Text>
+            <Text>Assigned: {item.assignedTo || "none"}</Text>
+
+            {/* BUTTONS */}
+            <View style={{ flexDirection: "row", marginTop: 10 }}>
+
+              <TouchableOpacity
+                style={{ backgroundColor: "green", padding: 8, marginRight: 5 }}
+                onPress={() => updateStatus(item.id, "accepted")}
+              >
+                <Text style={{ color: "#fff" }}>Accept</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ backgroundColor: "red", padding: 8, marginRight: 5 }}
+                onPress={() => updateStatus(item.id, "rejected")}
+              >
+                <Text style={{ color: "#fff" }}>Reject</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ backgroundColor: "blue", padding: 8 }}
+                onPress={() => assignOrder(item.id)}
+              >
+                <Text style={{ color: "#fff" }}>Assign</Text>
+              </TouchableOpacity>
+
+            </View>
+
           </View>
         )}
       />
