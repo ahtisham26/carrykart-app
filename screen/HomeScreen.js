@@ -8,7 +8,7 @@ import {
   TouchableOpacity
 } from "react-native";
 
-import { Ionicons } from "@expo/vector-icons";
+import { Audio } from "expo-av";   // 🔊 SOUND
 
 import { auth, db } from "../firebase/config";
 import { signOut } from "firebase/auth";
@@ -21,20 +21,27 @@ import {
 } from "firebase/firestore";
 
 export default function HomeScreen({ user }) {
-  const [tab, setTab] = useState("home");
-
-  // 🔥 STATES (FIXED — all separate)
   const [orders, setOrders] = useState([]);
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");        // ✅ separate
+  const [phone, setPhone] = useState("");
   const [pickup, setPickup] = useState("");
   const [delivery, setDelivery] = useState("");
-  const [area, setArea] = useState("");
-  const [landmark, setLandmark] = useState("");
+  const [distance, setDistance] = useState("");
 
-  const [distance, setDistance] = useState("");  // ✅ separate
   const [price, setPrice] = useState(0);
+
+  // 🔊 SOUND FUNCTION
+  const playSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/success.mp3")
+      );
+      await sound.playAsync();
+    } catch (e) {
+      console.log("sound error", e);
+    }
+  };
 
   // 📦 FETCH ORDERS
   useEffect(() => {
@@ -48,14 +55,13 @@ export default function HomeScreen({ user }) {
         id: doc.id,
         ...doc.data()
       }));
-
       setOrders(list);
     });
 
     return unsubscribe;
   }, []);
 
-  // 💸 PRICE CALCULATION
+  // 💸 PRICE
   useEffect(() => {
     if (!distance) return setPrice(0);
 
@@ -65,10 +71,10 @@ export default function HomeScreen({ user }) {
     setPrice(60 + (km * 10) + 20);
   }, [distance]);
 
-  // 🛒 PLACE ORDER
+  // 🛒 PLACE ORDER (FIXED + SOUND)
   const placeOrder = async () => {
     if (!name || !phone || !pickup || !delivery || !distance) {
-      alert("Fill required fields");
+      alert("Fill all fields");
       return;
     }
 
@@ -77,26 +83,24 @@ export default function HomeScreen({ user }) {
       phone,
       pickupAddress: pickup,
       deliveryAddress: delivery,
-      area,
-      landmark,
       distance,
       price,
       userEmail: user.email,
       status: "pending",
-      deliveryStatus: "waiting",
       createdAt: new Date()
     });
+
+    // 🔊 SOUND PLAY
+    playSound();
 
     // RESET
     setName("");
     setPhone("");
     setPickup("");
     setDelivery("");
-    setArea("");
-    setLandmark("");
     setDistance("");
 
-    setTab("orders");
+    alert("Order placed ✅");
   };
 
   const logout = () => signOut(auth);
@@ -104,136 +108,68 @@ export default function HomeScreen({ user }) {
   return (
     <ScrollView style={styles.container}>
 
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.welcome}>
-          👋 {user.email.split("@")[0]}
-        </Text>
+      <Text style={styles.title}>Welcome {user.email}</Text>
 
-        <TouchableOpacity onPress={logout}>
-          <Ionicons name="log-out-outline" size={26} color="#800020" />
+      <TouchableOpacity onPress={logout}>
+        <Text style={styles.logout}>Logout</Text>
+      </TouchableOpacity>
+
+      {/* FORM */}
+      <View style={styles.card}>
+        <TextInput
+          placeholder="Name"
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+        />
+
+        <TextInput
+          placeholder="Phone"
+          style={styles.input}
+          value={phone}
+          onChangeText={setPhone}
+        />
+
+        <TextInput
+          placeholder="Pickup"
+          style={styles.input}
+          value={pickup}
+          onChangeText={setPickup}
+        />
+
+        <TextInput
+          placeholder="Delivery"
+          style={styles.input}
+          value={delivery}
+          onChangeText={setDelivery}
+        />
+
+        <TextInput
+          placeholder="Distance (km)"
+          style={styles.input}
+          value={distance}
+          onChangeText={setDistance}
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.price}>₹ {price}</Text>
+
+        <TouchableOpacity style={styles.button} onPress={placeOrder}>
+          <Text style={styles.btnText}>PLACE ORDER</Text>
         </TouchableOpacity>
       </View>
 
-      {/* HOME */}
-      {tab === "home" && (
-        <>
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.cardBtn} onPress={() => setTab("create")}>
-              <Ionicons name="add-circle" size={32} color="#800020" />
-              <Text style={styles.cardText}>Create Order</Text>
-            </TouchableOpacity>
+      {/* ORDERS */}
+      <View style={styles.card}>
+        <Text style={styles.sub}>My Orders</Text>
 
-            <TouchableOpacity style={styles.cardBtn} onPress={() => setTab("orders")}>
-              <Ionicons name="cube" size={32} color="#800020" />
-              <Text style={styles.cardText}>My Orders</Text>
-            </TouchableOpacity>
+        {orders.map(order => (
+          <View key={order.id} style={styles.order}>
+            <Text>{order.pickupAddress} → {order.deliveryAddress}</Text>
+            <Text>₹{order.price}</Text>
           </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent Orders</Text>
-
-            {orders.length === 0 ? (
-              <Text style={styles.empty}>No orders yet</Text>
-            ) : (
-              orders.slice(0, 3).map(order => (
-                <View key={order.id} style={styles.orderCard}>
-                  <Text style={styles.route}>
-                    {order.pickupAddress} → {order.deliveryAddress}
-                  </Text>
-                  <Text style={styles.meta}>₹{order.price}</Text>
-                </View>
-              ))
-            )}
-          </View>
-        </>
-      )}
-
-      {/* CREATE ORDER */}
-      {tab === "create" && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Create Order</Text>
-
-          <TextInput
-            placeholder="Full Name"
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-          />
-
-          <TextInput
-            placeholder="Phone Number"
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}   // ✅ FIXED
-            keyboardType="number-pad"
-          />
-
-          <TextInput
-            placeholder="Pickup Address"
-            style={styles.input}
-            value={pickup}
-            onChangeText={setPickup}
-          />
-
-          <TextInput
-            placeholder="Delivery Address"
-            style={styles.input}
-            value={delivery}
-            onChangeText={setDelivery}
-          />
-
-          <TextInput
-            placeholder="Area"
-            style={styles.input}
-            value={area}
-            onChangeText={setArea}
-          />
-
-          <TextInput
-            placeholder="Landmark"
-            style={styles.input}
-            value={landmark}
-            onChangeText={setLandmark}
-          />
-
-          <TextInput
-            placeholder="Distance (km)"
-            style={styles.input}
-            value={distance}
-            onChangeText={setDistance}   // ✅ FIXED
-            keyboardType="numeric"
-          />
-
-          <Text style={styles.price}>₹ {price}</Text>
-
-          <TouchableOpacity style={styles.button} onPress={placeOrder}>
-            <Text style={styles.buttonText}>PLACE ORDER</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* MY ORDERS */}
-      {tab === "orders" && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Orders</Text>
-
-          {orders.length === 0 ? (
-            <Text style={styles.empty}>No orders</Text>
-          ) : (
-            orders.map(order => (
-              <View key={order.id} style={styles.orderCard}>
-                <Text style={styles.route}>
-                  {order.pickupAddress} → {order.deliveryAddress}
-                </Text>
-
-                <Text style={styles.meta}>₹{order.price}</Text>
-                <Text style={styles.meta}>Status: {order.status}</Text>
-              </View>
-            ))
-          )}
-        </View>
-      )}
+        ))}
+      </View>
 
     </ScrollView>
   );
@@ -242,96 +178,61 @@ export default function HomeScreen({ user }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f4f6fb",
+    backgroundColor: "#fff",
     padding: 15
   },
 
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20
-  },
-
-  welcome: {
-    fontSize: 22,
+  title: {
+    fontSize: 20,
     fontWeight: "bold"
   },
 
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-
-  cardBtn: {
-    backgroundColor: "#fff",
-    width: "48%",
-    padding: 20,
-    borderRadius: 20,
-    alignItems: "center",
-    elevation: 5
-  },
-
-  cardText: {
-    marginTop: 10,
-    fontWeight: "bold"
-  },
-
-  section: {
-    marginTop: 20,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 20,
-    elevation: 5
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+  logout: {
+    color: "red",
     marginBottom: 10
+  },
+
+  card: {
+    backgroundColor: "#f5f5f5",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15
   },
 
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8
   },
 
   button: {
     backgroundColor: "#800020",
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center"
   },
 
-  buttonText: {
+  btnText: {
     color: "#fff",
     fontWeight: "bold"
   },
 
   price: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10
   },
 
-  orderCard: {
-    backgroundColor: "#f1f1f1",
-    padding: 15,
-    borderRadius: 12,
-    marginTop: 10
+  sub: {
+    fontWeight: "bold",
+    marginBottom: 10
   },
 
-  route: {
-    fontWeight: "bold"
-  },
-
-  meta: {
-    color: "#666"
-  },
-
-  empty: {
-    color: "#888"
+  order: {
+    padding: 10,
+    backgroundColor: "#fff",
+    marginBottom: 5,
+    borderRadius: 8
   }
 });
