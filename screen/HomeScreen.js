@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, StyleSheet, ScrollView,
-  TextInput, TouchableOpacity
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity
 } from "react-native";
 
 import { auth, db } from "../firebase/config";
 import { signOut } from "firebase/auth";
 import {
-  collection, addDoc, query,
-  where, onSnapshot
+  collection,
+  addDoc,
+  query,
+  where,
+  onSnapshot
 } from "firebase/firestore";
 
 export default function HomeScreen({ user }) {
+  const [tab, setTab] = useState("home");
 
   const [orders, setOrders] = useState([]);
 
@@ -19,15 +27,15 @@ export default function HomeScreen({ user }) {
   const [phone, setPhone] = useState("");
   const [pickup, setPickup] = useState("");
   const [delivery, setDelivery] = useState("");
-  const [distance, setDistance] = useState("");
+  const [area, setArea] = useState("");
+  const [landmark, setLandmark] = useState("");
 
-  const [showForm, setShowForm] = useState(false);
-  const [showOrders, setShowOrders] = useState(true);
+  // 💸 NEW
+  const [distance, setDistance] = useState("");
+  const [price, setPrice] = useState(0);
 
   // 🔥 REALTIME ORDERS
   useEffect(() => {
-    if (!user?.email) return;
-
     const q = query(
       collection(db, "orders"),
       where("userEmail", "==", user.email)
@@ -37,25 +45,29 @@ export default function HomeScreen({ user }) {
       const list = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }))
-      .filter(item => item.deliveryStatus !== "delivered"); // clean UI
+      }));
 
       setOrders(list);
     });
 
     return unsubscribe;
-  }, [user]);
+  }, []);
 
-  // 💰 PRICE LOGIC
-  const calculatePrice = () => {
-    const d = parseFloat(distance) || 0;
-    return 80 + (d * 10);
-  };
+  // 💸 AUTO PRICE CALCULATION
+  useEffect(() => {
+    if (!distance) {
+      setPrice(0);
+      return;
+    }
+
+    const total = 60 + (parseFloat(distance) * 10) + 20;
+    setPrice(total);
+  }, [distance]);
 
   // 🛒 PLACE ORDER
   const placeOrder = async () => {
     if (!name || !phone || !pickup || !delivery || !distance) {
-      alert("Fill all fields");
+      alert("Fill required fields");
       return;
     }
 
@@ -64,28 +76,32 @@ export default function HomeScreen({ user }) {
       phone,
       pickupAddress: pickup,
       deliveryAddress: delivery,
-      distance: parseFloat(distance),
-      amount: calculatePrice(),
-
+      area,
+      landmark,
+      distance,
+      price,
       userEmail: user.email,
       status: "pending",
-      deliveryStatus: "pending",
-      assignedTo: "",
-
+      deliveryStatus: "waiting",
       createdAt: new Date()
     });
 
+    // reset
     setName("");
     setPhone("");
     setPickup("");
     setDelivery("");
+    setArea("");
+    setLandmark("");
     setDistance("");
+    setPrice(0);
 
-    setShowForm(false);
-    setShowOrders(true);
+    setTab("orders");
   };
 
-  const logout = () => signOut(auth);
+  const logout = () => {
+    signOut(auth);
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -93,7 +109,7 @@ export default function HomeScreen({ user }) {
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.welcome}>
-          Hi, {user.email.split("@")[0]} 👋
+          Welcome, {user.email.split("@")[0]}
         </Text>
 
         <TouchableOpacity onPress={logout}>
@@ -101,61 +117,88 @@ export default function HomeScreen({ user }) {
         </TouchableOpacity>
       </View>
 
-      {/* ACTIONS */}
-      <View style={styles.actions}>
+      {/* HOME */}
+      {tab === "home" && (
+        <>
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => setTab("create")}
+            >
+              <Text style={styles.actionTitle}>Create Order</Text>
+              <Text style={styles.actionSub}>Send a parcel</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => {
-            setShowForm(true);
-            setShowOrders(false);
-          }}
-        >
-          <Text style={styles.actionTitle}>Create Order</Text>
-          <Text style={styles.actionSub}>Place new delivery</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => setTab("orders")}
+            >
+              <Text style={styles.actionTitle}>My Orders</Text>
+              <Text style={styles.actionSub}>Track orders</Text>
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => {
-            setShowForm(false);
-            setShowOrders(true);
-          }}
-        >
-          <Text style={styles.actionTitle}>My Orders</Text>
-          <Text style={styles.actionSub}>Track deliveries</Text>
-        </TouchableOpacity>
+          {/* RECENT */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Recent Orders</Text>
 
-      </View>
+            {orders.length === 0 ? (
+              <Text style={styles.empty}>No orders yet</Text>
+            ) : (
+              orders.slice(0, 3).map(order => (
+                <View key={order.id} style={styles.orderCard}>
+                  <Text style={styles.route}>
+                    {order.pickupAddress} → {order.deliveryAddress}
+                  </Text>
+                  <Text style={styles.meta}>
+                    Status: {order.status}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        </>
+      )}
 
-      {/* FORM */}
-      {showForm && (
+      {/* CREATE ORDER */}
+      {tab === "create" && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>New Order</Text>
+          <Text style={styles.cardTitle}>Create Order</Text>
 
-          <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName}/>
-          <TextInput style={styles.input} placeholder="Phone" value={phone} onChangeText={setPhone}/>
-          <TextInput style={styles.input} placeholder="Pickup" value={pickup} onChangeText={setPickup}/>
-          <TextInput style={styles.input} placeholder="Delivery" value={delivery} onChangeText={setDelivery}/>
-          <TextInput style={styles.input} placeholder="Distance (km)" value={distance} onChangeText={setDistance}/>
+          <TextInput placeholder="Full Name" style={styles.input} value={name} onChangeText={setName} />
+          <TextInput placeholder="Phone" style={styles.input} value={phone} onChangeText={setPhone} />
+          <TextInput placeholder="Pickup Address" style={styles.input} value={pickup} onChangeText={setPickup} />
+          <TextInput placeholder="Delivery Address" style={styles.input} value={delivery} onChangeText={setDelivery} />
+          <TextInput placeholder="Area" style={styles.input} value={area} onChangeText={setArea} />
+          <TextInput placeholder="Landmark" style={styles.input} value={landmark} onChangeText={setLandmark} />
 
+          {/* 💸 DISTANCE */}
+          <TextInput
+            placeholder="Distance (km)"
+            style={styles.input}
+            value={distance}
+            onChangeText={setDistance}
+            keyboardType="numeric"
+          />
+
+          {/* 💸 PRICE */}
           <Text style={styles.price}>
-            Total: ₹{calculatePrice()}
+            Total Price: ₹{price}
           </Text>
 
           <TouchableOpacity style={styles.button} onPress={placeOrder}>
-            <Text style={styles.buttonText}>Place Order</Text>
+            <Text style={styles.buttonText}>PLACE ORDER</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* ORDERS */}
-      {showOrders && (
+      {/* MY ORDERS */}
+      {tab === "orders" && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Active Orders</Text>
+          <Text style={styles.cardTitle}>My Orders</Text>
 
           {orders.length === 0 ? (
-            <Text style={styles.empty}>No orders yet</Text>
+            <Text style={styles.empty}>No orders</Text>
           ) : (
             orders.map(order => (
               <View key={order.id} style={styles.orderCard}>
@@ -164,23 +207,26 @@ export default function HomeScreen({ user }) {
                 </Text>
 
                 <Text style={styles.meta}>
-                  ₹{order.amount} • {order.distance} km
+                  Status: {order.status}
                 </Text>
 
-                <Text style={styles.status}>
-                  {order.deliveryStatus}
+                {/* 💸 SHOW PRICE */}
+                <Text style={styles.meta}>
+                  Price: ₹{order.price}
+                </Text>
+
+                <Text style={styles.meta}>
+                  Delivery: {order.deliveryStatus}
                 </Text>
               </View>
             ))
           )}
         </View>
       )}
-
     </ScrollView>
   );
 }
 
-// 🎨 STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -264,7 +310,8 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10
+    marginBottom: 10,
+    color: "#800020"
   },
 
   orderCard: {
@@ -281,12 +328,6 @@ const styles = StyleSheet.create({
   meta: {
     color: "#666",
     marginTop: 3
-  },
-
-  status: {
-    marginTop: 5,
-    color: "#800020",
-    fontWeight: "bold"
   },
 
   empty: {
