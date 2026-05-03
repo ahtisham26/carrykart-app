@@ -15,7 +15,13 @@ export default function App() {
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarActiveTintColor: "#4CAF50",
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            height: 60,
+            borderTopLeftRadius: 15,
+            borderTopRightRadius: 15,
+          },
+          tabBarActiveTintColor: "#800020",
           tabBarInactiveTintColor: "gray",
 
           tabBarIcon: ({ focused, color, size }) => {
@@ -23,19 +29,19 @@ export default function App() {
 
             if (route.name === "Home") {
               iconName = focused ? "home" : "home-outline";
-            } else if (route.name === "Cart") {
+            } else if (route.name === "Orders") {
               iconName = focused ? "cart" : "cart-outline";
             } else if (route.name === "Add") {
               iconName = focused ? "add-circle" : "add-circle-outline";
             }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={26} color={color} />;
           },
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Cart" component={OrdersScreen} />
         <Tab.Screen name="Add" component={CreateOrder} />
+        <Tab.Screen name="Orders" component={OrdersScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
