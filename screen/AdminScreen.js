@@ -1,131 +1,230 @@
-  import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet
+} from "react-native";
+
 import { db } from "../firebase/config";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  updateDoc,
+  doc
+} from "firebase/firestore";
 
 export default function AdminDashboard() {
-  const [email, setEmail] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [emails, setEmails] = useState({});
   const [stats, setStats] = useState({
     total: 0,
     completed: 0,
-    remaining: 0,
-    earnings: 0,
+    pending: 0,
+    earnings: 0
   });
 
-  const fetchStats = async () => {
-    const snap = await getDocs(collection(db, "orders"));
+  // 📦 FETCH + CALCULATE STATS
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-    let total = snap.size;
-    let completed = 0;
-    let earnings = 0;
+      setOrders(list);
 
-    snap.forEach((d) => {
-      const data = d.data();
-      if (data.status === "completed") {
-        completed++;
-        earnings += data.price || 0;
-      }
+      // 🔥 CALCULATE STATS
+      let total = list.length;
+      let completed = 0;
+      let earnings = 0;
+
+      list.forEach(order => {
+        if (order.status === "completed") {
+          completed++;
+          earnings += order.price || 0;
+        }
+      });
+
+      setStats({
+        total,
+        completed,
+        pending: total - completed,
+        earnings
+      });
     });
 
-    setStats({
-      total,
-      completed,
-      remaining: total - completed,
-      earnings,
+    return unsubscribe;
+  }, []);
+
+  // ✉️ EMAIL INPUT
+  const handleEmailChange = (id, value) => {
+    setEmails({ ...emails, [id]: value });
+  };
+
+  // 📌 ASSIGN
+  const assignOrder = async (orderId) => {
+    const email = emails[orderId];
+
+    if (!email) return alert("Enter email");
+
+    await updateDoc(doc(db, "orders", orderId), {
+      assignedTo: email,
+      status: "assigned"
     });
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  // 📦 Assign by email (OLD STYLE)
-  const assignOrder = async () => {
-    if (!email) {
-      Alert.alert("Enter delivery boy email");
-      return;
-    }
-
-    try {
-      const orderRef = doc(db, "orders", "CURRENT_ORDER_ID"); // replace dynamic id
-      await updateDoc(orderRef, {
-        assignedTo: email,
-        status: "assigned",
-      });
-
-      Alert.alert("Assigned", `Order assigned to ${email}`);
-      setEmail("");
-      fetchStats();
-    } catch (error) {
-      console.log(error);
-    }
+  // ✅ MARK COMPLETE
+  const markComplete = async (orderId) => {
+    await updateDoc(doc(db, "orders", orderId), {
+      status: "completed"
+    });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Admin Dashboard</Text>
+    <View style={{ flex: 1 }}>
 
-      {/* 📊 STATS */}
-      <View style={styles.card}>
-        <Text>Total Orders: {stats.total}</Text>
-        <Text>Completed: {stats.completed}</Text>
-        <Text>Remaining: {stats.remaining}</Text>
-        <Text style={styles.earnings}>Earnings: ₹{stats.earnings}</Text>
+      {/* 🔥 STATS */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <Text>Total</Text>
+          <Text style={styles.big}>{stats.total}</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text>Completed</Text>
+          <Text style={styles.big}>{stats.completed}</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text>Pending</Text>
+          <Text style={styles.big}>{stats.pending}</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text>Earnings</Text>
+          <Text style={styles.big}>₹{stats.earnings}</Text>
+        </View>
       </View>
 
-      {/* 📧 EMAIL INPUT */}
-      <TextInput
-        placeholder="Enter delivery boy email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-      />
+      {/* 📦 ORDERS */}
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id}
+        style={{ padding: 10 }}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
 
-      {/* 📌 ASSIGN BUTTON */}
-      <TouchableOpacity style={styles.button} onPress={assignOrder}>
-        <Text style={styles.buttonText}>ASSIGN ORDER</Text>
-      </TouchableOpacity>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text>📞 {item.phone}</Text>
+            <Text>📍 {item.pickupAddress}</Text>
+            <Text>➡️ {item.deliveryAddress}</Text>
+            <Text>🚚 {item.distance} km</Text>
+            <Text style={styles.price}>₹ {item.price}</Text>
+            <Text>Status: {item.status}</Text>
+
+            {/* EMAIL */}
+            <TextInput
+              placeholder="Delivery boy email"
+              style={styles.input}
+              value={emails[item.id] || ""}
+              onChangeText={(text) =>
+                handleEmailChange(item.id, text)
+              }
+            />
+
+            {/* BUTTONS */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+
+              <TouchableOpacity
+                style={styles.assignBtn}
+                onPress={() => assignOrder(item.id)}
+              >
+                <Text style={styles.btnText}>Assign</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.completeBtn}
+                onPress={() => markComplete(item.id)}
+              >
+                <Text style={styles.btnText}>Done</Text>
+              </TouchableOpacity>
+
+            </View>
+
+          </View>
+        )}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#f5f6fa",
+  statsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    padding: 10
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  card: {
+
+  statCard: {
     backgroundColor: "#fff",
     padding: 15,
     borderRadius: 12,
-    marginBottom: 15,
-    elevation: 3,
-  },
-  input: {
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 10,
+    width: "45%",
     marginBottom: 10,
+    elevation: 3
   },
-  button: {
-    backgroundColor: "#4CAF50",
+
+  big: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 5
+  },
+
+  card: {
+    backgroundColor: "#fff",
     padding: 15,
+    borderRadius: 15,
+    marginBottom: 10,
+    elevation: 4
+  },
+
+  name: {
+    fontSize: 16,
+    fontWeight: "bold"
+  },
+
+  price: {
+    fontWeight: "bold",
+    marginTop: 5
+  },
+
+  input: {
+    borderWidth: 1,
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 10
+  },
+
+  assignBtn: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
     borderRadius: 10,
-    alignItems: "center",
+    marginTop: 10
   },
-  buttonText: {
+
+  completeBtn: {
+    backgroundColor: "#2196F3",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10
+  },
+
+  btnText: {
     color: "#fff",
-    fontWeight: "bold",
-  },
-  earnings: {
-    marginTop: 5,
-    fontWeight: "bold",
-    color: "green",
-  },
-});  
+    fontWeight: "bold"
+  }
+});
