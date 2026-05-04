@@ -21,10 +21,14 @@ export default function CreateOrder() {
   const [price, setPrice] = useState(0);
 
   const playSound = async () => {
-    const { sound } = await Audio.Sound.createAsync(
-      require("../assets/success.mp3")
-    );
-    await sound.playAsync();
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/success.mp3")
+      );
+      await sound.playAsync();
+    } catch (e) {
+      console.log("Sound error:", e);
+    }
   };
 
   useEffect(() => {
@@ -37,32 +41,44 @@ export default function CreateOrder() {
   }, [distance]);
 
   const placeOrder = async () => {
-    if (!name || !phone || !pickup || !delivery || !distance) {
-      Alert.alert("Fill all fields");
-      return;
+    try {
+      const user = auth.currentUser;
+
+      if (!user) {
+        Alert.alert("Error", "You must be logged in");
+        return;
+      }
+
+      if (!name || !phone || !pickup || !delivery || !distance) {
+        Alert.alert("Fill all fields");
+        return;
+      }
+
+      await addDoc(collection(db, "orders"), {
+        name,
+        phone,
+        pickupAddress: pickup,
+        deliveryAddress: delivery,
+        distance,
+        price,
+        userEmail: user.email,
+        status: "pending",
+        createdAt: new Date()
+      });
+
+      await playSound();
+
+      setName("");
+      setPhone("");
+      setPickup("");
+      setDelivery("");
+      setDistance("");
+
+      Alert.alert("Order placed successfully ✅");
+    } catch (error) {
+      console.log("Order Error:", error);
+      Alert.alert("Error placing order");
     }
-
-    await addDoc(collection(db, "orders"), {
-      name,
-      phone,
-      pickupAddress: pickup,
-      deliveryAddress: delivery,
-      distance,
-      price,
-      userEmail: auth.currentUser.email,
-      status: "pending",
-      createdAt: new Date()
-    });
-
-    await playSound();
-
-    setName("");
-    setPhone("");
-    setPickup("");
-    setDelivery("");
-    setDistance("");
-
-    Alert.alert("Order placed successfully ✅");
   };
 
   return (
@@ -81,6 +97,7 @@ export default function CreateOrder() {
         style={styles.input}
         value={phone}
         onChangeText={setPhone}
+        keyboardType="phone-pad"
       />
 
       <TextInput
