@@ -8,8 +8,16 @@ import {
 import { auth } from "../firebase/config";
 import { signOut } from "firebase/auth";
 
-export default function HomeScreen({ user }) {
-  const logout = () => signOut(auth);
+export default function HomeScreen() {
+  const user = auth.currentUser;
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.log("Logout Error:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -17,12 +25,14 @@ export default function HomeScreen({ user }) {
 
       <View style={styles.card}>
         <Text style={styles.welcome}>Welcome</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <Text style={styles.email}>
+          {user ? user.email : "No user logged in"}
+        </Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.info}>📦 Create orders from Add tab</Text>
-        <Text style={styles.info}>🛒 View orders in Cart tab</Text>
+        <Text style={styles.info}>🛒 View orders in Orders tab</Text>
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
