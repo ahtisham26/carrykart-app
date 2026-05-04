@@ -7,23 +7,45 @@ export default function OrdersScreen() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.log("No user logged in");
+      return;
+    }
+
     const q = query(
       collection(db, "orders"),
-      where("userEmail", "==", auth.currentUser.email)
+      where("userEmail", "==", user.email)
     );
 
-    const unsub = onSnapshot(q, snap => {
-      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setOrders(data);
+      },
+      (error) => {
+        console.log("Firestore Error:", error);
+      }
+    );
 
-    return unsub;
+    return () => unsub();
   }, []);
 
   return (
     <FlatList
       style={{ padding: 15 }}
       data={orders}
-      keyExtractor={(i) => i.id}
+      keyExtractor={(item) => item.id}
+      ListEmptyComponent={
+        <Text style={{ textAlign: "center", marginTop: 50 }}>
+          No orders yet 📭
+        </Text>
+      }
       renderItem={({ item }) => (
         <View style={styles.card}>
           <Text style={styles.text}>Distance: {item.distance} km</Text>
@@ -45,7 +67,12 @@ const styles = StyleSheet.create({
   },
 
   text: { fontSize: 16 },
-  price: { fontWeight: "bold", marginTop: 5 },
+
+  price: {
+    fontWeight: "bold",
+    marginTop: 5,
+    fontSize: 18,
+  },
 
   status: {
     marginTop: 5,
